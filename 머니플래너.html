@@ -602,7 +602,7 @@ let donutChart=null,trendChart=null,hbarChart=null,fixedBarChart=null;
 
 const CAT_COLORS=['#f5a623','#d85a30','#e8855a','#d84066','#5b8dd9','#2d9e75','#8b6fd9','#e06090','#6699cc','#40b080','#c0892a','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#27ae60'];
 
-function save(){try{localStorage.setItem('dp_tx',JSON.stringify(transactions))}catch(e){}}
+function save(){try{localStorage.setItem('dp_tx',JSON.stringify(transactions))}catch(e){}triggerAutoSave();}
 function fmt(n){return'₩'+Math.abs(Math.round(n)).toLocaleString('ko-KR')}
 function fmtDate(d){return d.replace(/-/g,'/').substring(2)}
 function todayStr(){return new Date().toISOString().slice(0,10)}
@@ -917,45 +917,149 @@ function addTransaction(){
 }
 
 
-// ── Google Sheets 연동 (Apps Script) ──
 
-// ── 비밀번호 잠금 ──
-const DEFAULT_PW = '1234';
-function checkPassword(){
-  const input = document.getElementById('lock-input').value;
-  const saved = localStorage.getItem('mp_password') || DEFAULT_PW;
-  if(input === saved){
-    document.getElementById('lock-screen').style.display = 'none';
-    localStorage.setItem('mp_unlocked', Date.now());
-  } else {
-    document.getElementById('lock-error').textContent = '❌ 비밀번호가 틀렸어요';
-    document.getElementById('lock-input').value = '';
-    document.getElementById('lock-input').focus();
-    setTimeout(()=>document.getElementById('lock-error').textContent='', 2000);
+// ── Google Sheets 연동 ──
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWKPYHNxOHtchf_wWYVXs2OiFAoK3G2fdABXJ-Csc3W6EXi-G-pUzqGUqMW-xx0mvN/exec';
+let syncStatus = 'idle';
+let autoSaveTimer = null;
+
+async function writeSheet(sheetName, rows) {
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify({sheet: sheetName, rows: rows})
+  });
+  return await res.json();
+}
+
+async function readSheet(sheetName) {
+  const res = await fetch(APPS_SCRIPT_URL + '?sheet=' + encodeURIComponent(sheetName));
+  const data = await res.json();
+  return data.values || [];
+}
+
+async function syncToSheets() {
+  if(syncStatus === 'syncing') return;
+  setSyncStatus('syncing');
+  try {
+    const txRows = [['id','name','date','amount','category','payment','fixed','type','memo']];
+    transactions.forEach(t=>txRows.push([t.id,t.name,t.date,t.amount,t.category||'',t.payment||'',t.fixed?'Y':'N',t.type,t.memo||'']));
+    await writeSheet('거래내역', txRows);
+
+    const loanRows = [['id','name','type','repay','years','principal','rate','start','end','memo']];
+    loans.forEach(l=>loanRows.push([l.id,l.name,l.type,l.repay,l.years,l.principal,l.rate,l.start||'',l.end||'',l.memo||'']));
+    await writeSheet('대출', loanRows);
+
+    const insRows = [['id','name','company','status','renew','kind','start','end','monthly','years','coverage','special']];
+    insurances.forEach(i=>insRows.push([i.id,i.name,i.company,i.status,i.renew,i.kind,i.start||'',i.end||'',i.monthly,i.years,i.coverage||'',i.special||'']));
+    await writeSheet('보험', insRows);
+
+    const savRows = [['id','name','bank','monthly','rate','start','end','goal','memo']];
+    savings.forEach(s=>savRows.push([s.id,s.name,s.bank||'',s.monthly,s.rate,s.start||'',s.end||'',s.goal||'',s.memo||'']));
+    await writeSheet('예적금', savRows);
+
+    const goalRows = [['category','amount']];
+    Object.entries(goals).forEach(([k,v])=>goalRows.push([k,v]));
+    await writeSheet('목표', goalRows);
+
+    setSyncStatus('done');
+    setTimeout(()=>setSyncStatus('idle'), 2000);
+  } catch(e) {
+    console.error('sync error:', e);
+    setSyncStatus('error');
+    setTimeout(()=>setSyncStatus('idle'), 3000);
   }
 }
 
-function changePassword(){
-  const current = prompt('현재 비밀번호를 입력하세요:');
-  const saved = localStorage.getItem('mp_password') || DEFAULT_PW;
-  if(current !== saved){ alert('현재 비밀번호가 틀렸어요!'); return; }
-  const newPw = prompt('새 비밀번호를 입력하세요:');
-  if(!newPw){ alert('비밀번호를 입력해주세요!'); return; }
-  const confirm = prompt('새 비밀번호를 다시 입력하세요:');
-  if(newPw !== confirm){ alert('비밀번호가 일치하지 않아요!'); return; }
-  localStorage.setItem('mp_password', newPw);
-  alert('✅ 비밀번호가 변경됐어요!');
+async function loadFromSheets() {
+  setSyncStatus('loading');
+  try {
+    const txData = await readSheet('거래내역');
+    if(txData.length > 1) {
+      transactions = txData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),name:r[1],date:r[2],amount:parseInt(r[3]),
+        category:r[4]||'',payment:r[5]||'현금',fixed:r[6]==='Y',type:r[7]||'지출',memo:r[8]||''
+      }));
+      nextId = Math.max(...transactions.map(t=>t.id),0)+1;
+      save();
+    }
+
+    const loanData = await readSheet('대출');
+    if(loanData.length > 1) {
+      loans = loanData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),name:r[1],type:r[2],repay:r[3],
+        years:parseFloat(r[4]),principal:parseInt(r[5]),rate:parseFloat(r[6]),
+        start:r[7]||'',end:r[8]||'',memo:r[9]||''
+      }));
+      saveLoan();
+    }
+
+    const insData = await readSheet('보험');
+    if(insData.length > 1) {
+      insurances = insData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),name:r[1],company:r[2]||'',status:r[3]||'납입중',
+        renew:r[4]||'',kind:r[5]||'',start:r[6]||'',end:r[7]||'',
+        monthly:parseInt(r[8])||0,years:parseInt(r[9])||0,
+        coverage:r[10]||'',special:r[11]||''
+      }));
+      saveIns();
+    }
+
+    const savData = await readSheet('예적금');
+    if(savData.length > 1) {
+      savings = savData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),name:r[1],bank:r[2]||'',monthly:parseInt(r[3])||0,
+        rate:parseFloat(r[4])||0,start:r[5]||'',end:r[6]||'',
+        goal:r[7]||'',memo:r[8]||''
+      }));
+      saveSav();
+    }
+
+    const goalData = await readSheet('목표');
+    if(goalData.length > 1) {
+      goals = {};
+      goalData.slice(1).forEach(r=>{if(r[0])goals[r[0]]=parseInt(r[1])||0});
+      try{localStorage.setItem('dp_goals',JSON.stringify(goals))}catch(e){}
+    }
+
+    setSyncStatus('done');
+    setTimeout(()=>setSyncStatus('idle'), 2000);
+    // 현재 활성 페이지 새로고침
+    const active = document.querySelector('.nav-item.active');
+    if(active) active.click();
+  } catch(e) {
+    console.error('load error:', e);
+    setSyncStatus('error');
+    setTimeout(()=>setSyncStatus('idle'), 3000);
+  }
 }
 
-// 잠금 해제 상태 확인 (1시간 유지)
-(function(){
-  const unlocked = localStorage.getItem('mp_unlocked');
-  if(unlocked && Date.now() - parseInt(unlocked) < 3600000){
-    document.getElementById('lock-screen').style.display = 'none';
-  } else {
-    setTimeout(()=>document.getElementById('lock-input').focus(), 100);
+// 데이터 변경시 자동 저장 (3초 딜레이)
+function triggerAutoSave() {
+  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>syncToSheets(), 3000);
+}
+
+function setSyncStatus(status) {
+  syncStatus = status;
+  const btn = document.getElementById('sync-btn');
+  const loadBtn = document.getElementById('load-btn');
+  if(!btn) return;
+  const states = {
+    syncing: ['⏳ 저장 중...', true],
+    loading: ['⏳ 불러오는 중...', true],
+    done:    ['✅ 저장 완료!', false],
+    error:   ['❌ 오류 발생', false],
+    idle:    ['☁️ 저장', false]
+  };
+  const [text, disabled] = states[status] || states.idle;
+  btn.textContent = text;
+  btn.disabled = disabled;
+  if(loadBtn) {
+    loadBtn.textContent = status==='loading' ? '⏳' : '📥 불러오기';
+    loadBtn.disabled = disabled;
   }
-})();
+}
 
 renderLedger();
 
@@ -1105,7 +1209,7 @@ function calcLoanProgress(l){
   return{paid,remaining,pct,elapsedMonths,totalMonths};
 }
 
-function saveLoan(){try{localStorage.setItem('dp_loans',JSON.stringify(loans))}catch(e){}}
+function saveLoan(){try{localStorage.setItem('dp_loans',JSON.stringify(loans))}catch(e){}triggerAutoSave();}
 
 function renderLoan(){
   let totalPrincipal=0,totalInterest=0,rateSum=0;
@@ -1197,7 +1301,7 @@ function deleteLoan(id){if(!confirm('삭제할까요?'))return;loans=loans.filte
 const INS_SAMPLE=[{"id": 1, "name": "KB탑클래스 건강보험", "company": "KB손해보험", "status": "납입중", "renew": "혼합", "kind": "건강보험", "start": "2025-10-20", "end": "2096-10-20", "monthly": 109209, "years": 30, "coverage": "암진단비 (3억원) 사망 (1천만원)", "special": "", "contact": "유옥남 / 010-2279-7901"}, {"id": 2, "name": "KB손보 실손의료비", "company": "KB손해보험", "status": "납입중", "renew": "갱신", "kind": "실손보험", "start": "2025-10-20", "end": "2030-10-20", "monthly": 22910, "years": 5, "coverage": "4세대 실손 (5천만원)", "special": "", "contact": "유옥남 / 010-2279-7901"}, {"id": 3, "name": "THE건강한 치아보험", "company": "라이나생명", "status": "납입중", "renew": "갱신", "kind": "건강보험", "start": "2025-10-20", "end": "2035-10-20", "monthly": 40980, "years": 10, "coverage": "치아 (1천만원)", "special": "크라운 보장 (2천만원)", "contact": "유옥남 / 010-2279-7901"}];
 let insurances=JSON.parse(localStorage.getItem('dp_ins')||'null')||INS_SAMPLE;
 let insNextId=Math.max(...insurances.map(i=>i.id),0)+1;
-function saveIns(){try{localStorage.setItem('dp_ins',JSON.stringify(insurances))}catch(e){}}
+function saveIns(){try{localStorage.setItem('dp_ins',JSON.stringify(insurances))}catch(e){}triggerAutoSave();}
 
 function renderInsurance(){
   const total=insurances.reduce((s,i)=>s+i.monthly,0);
@@ -1268,7 +1372,7 @@ function deleteIns(id){if(!confirm('삭제할까요?'))return;insurances=insuran
 const SAV_SAMPLE=[{"id": 1, "name": "하나은행 적금", "bank": "하나은행", "monthly": 100000, "rate": 3.8, "start": "2025-04-05", "end": "2027-04-05", "goal": "여행자금", "memo": "적금"}, {"id": 2, "name": "카카오뱅크 적금", "bank": "카카오뱅크", "monthly": 200000, "rate": 3.8, "start": "2023-12-03", "end": "2024-12-03", "goal": "결혼자금", "memo": "적금"}, {"id": 3, "name": "기업은행 청년적금", "bank": "기업은행", "monthly": 500000, "rate": 5.0, "start": "2023-07-07", "end": "2025-07-07", "goal": "목돈마련", "memo": "적금"}, {"id": 4, "name": "하나은행 12개월예금", "bank": "하나은행", "monthly": 0, "rate": 3.5, "start": "2023-10-04", "end": "2024-10-04", "goal": "결혼자금", "memo": "예금"}, {"id": 5, "name": "카카오뱅크 12개월예금", "bank": "카카오뱅크", "monthly": 500000, "rate": 3.6, "start": "2025-01-29", "end": "2026-01-28", "goal": "전세자금", "memo": "예금"}];
 let savings=JSON.parse(localStorage.getItem('dp_sav')||'null')||SAV_SAMPLE;
 let savNextId=Math.max(...savings.map(s=>s.id),0)+1;
-function saveSav(){try{localStorage.setItem('dp_sav',JSON.stringify(savings))}catch(e){}}
+function saveSav(){try{localStorage.setItem('dp_sav',JSON.stringify(savings))}catch(e){}triggerAutoSave();}
 
 function calcSavings(s){
   const start=new Date(s.start),end=new Date(s.end);
