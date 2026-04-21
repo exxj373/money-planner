@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>머니플래너</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#f7f6f2;--surface:#fff;--surface2:#f0efe9;--border:#e8e6df;--text:#1a1a18;--text2:#6b6a64;--text3:#9e9d96;--accent:#f5c842;--accent-dark:#d4a800;--income:#2d9e75;--expense:#d85a30;--saving:#5b8dd9;--income-bg:#e6f5ee;--expense-bg:#faeae2;--saving-bg:#e8eef9;--r:12px;--rs:8px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 16px;flex-shrink:0;overflow-y:auto}
+.logo{font-size:20px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.logo-sub{font-size:11px;color:var(--text3);margin-bottom:28px;padding-left:2px}
+.nav-section{margin-bottom:22px}
+.nav-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;padding-left:8px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rs);font-size:13.5px;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent);color:var(--text);font-weight:600}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+.main{flex:1;overflow-y:auto;background:var(--bg)}
+.page{display:none!important}.page.active{display:block!important}
+.page-header{padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.page-title{font-size:22px;font-weight:700}.page-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.section{padding:20px 32px}
+.btn-primary{background:var(--accent);color:var(--text);border:none;border-radius:var(--rs);padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit}
+.btn-primary:hover{background:var(--accent-dark);color:#fff}
+.btn-cancel{padding:8px 14px;border:1px solid var(--border);border-radius:var(--rs);font-size:13px;background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-cancel:hover{background:var(--surface2)}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.summary-label{font-size:11.5px;color:var(--text3);margin-bottom:8px;font-weight:500}
+.summary-value{font-size:20px;font-weight:700}
+.summary-value.income{color:var(--income)}.summary-value.expense{color:var(--expense)}.summary-value.saving{color:var(--saving)}
+.board-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.board-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.board-card.full{grid-column:1/-1}
+.board-card-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:16px}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.table-toolbar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.filter-btn{display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;color:var(--text2);cursor:pointer;background:var(--surface);transition:all .15s;font-family:inherit}
+.filter-btn:hover{background:var(--surface2)}.filter-btn.active{background:var(--accent);border-color:var(--accent-dark);color:var(--text);font-weight:600}
+.spacer{flex:1}
+.search-input{border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12.5px;background:var(--surface);color:var(--text);outline:none;width:160px;font-family:inherit}
+.search-input:focus{border-color:var(--accent-dark)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;font-size:12px;color:var(--text3);font-weight:600;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:11px 14px;font-size:13.5px}
+.cell-name{font-weight:500}.cell-amount{font-weight:600;text-align:right}
+.cell-amount.expense{color:var(--expense)}.cell-amount.income{color:var(--income)}.cell-amount.saving{color:var(--saving)}.cell-amount.invest{color:#2d7a2d}.cell-amount.loan-pay{color:#c06000}
+.cell-memo{color:var(--text3);font-size:12.5px}.date-cell{color:var(--text2);font-size:12.5px;white-space:nowrap}
+.tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.tag-cash{background:#e8f5e9;color:#2e7d32}.tag-check{background:#e3f2fd;color:#1565c0}
+.tag-credit{background:#fce4ec;color:#c62828}.tag-group{background:#f3e5f5;color:#6a1b9a}
+.badge-income{background:var(--income-bg);color:var(--income)}.badge-expense{background:var(--expense-bg);color:var(--expense)}.badge-saving{background:var(--saving-bg);color:var(--saving)}
+.badge-invest{background:#e8f4e8;color:#2d7a2d}
+.badge-loan{background:#fff0e0;color:#c06000}
+.fixed-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent-dark)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:20px}
+.form-row{margin-bottom:14px}.form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block}
+.form-input,.form-select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;background:var(--surface);color:var(--text);outline:none;font-family:inherit;transition:border-color .15s}
+.form-input:focus,.form-select:focus{border-color:var(--accent-dark)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.load-more{padding:12px;text-align:center;font-size:13px;color:var(--text3);cursor:pointer;border-top:1px solid var(--border);transition:background .15s}
+.load-more:hover{background:var(--surface2);color:var(--text2)}
+.cal-day{border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:80px;padding:8px;transition:background .1s;cursor:pointer}
+.cal-day:hover{background:var(--surface2)}
+.period-col-title{font-size:13px;font-weight:700;padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text2);display:flex;justify-content:space-between;align-items:center}
+.period-item{padding:12px 16px;border-bottom:1px solid var(--border);transition:background .1s}
+.period-item:hover{background:var(--surface2)}.period-item:last-child{border-bottom:none}
+.period-item-name{font-size:13.5px;font-weight:500;margin-bottom:3px}.period-item-amt{font-size:13px;color:var(--text2)}
+
+@media (max-width: 768px) {
+  .app{flex-direction:column;height:auto;min-height:100vh}
+  .sidebar{width:100%;height:auto;padding:16px;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:none;border-bottom:1px solid var(--border);overflow-y:visible}
+  .logo{font-size:17px;margin-bottom:0}
+  .logo-sub{display:none}
+  .nav-section{margin-bottom:0;display:flex;flex-wrap:wrap;gap:4px}
+  .nav-label{display:none}
+  .nav-item{padding:6px 10px;font-size:12px;margin-bottom:0}
+  .nav-icon{font-size:13px}
+  .main{overflow-y:auto;height:auto}
+  .page-header{padding:16px 16px 0;flex-wrap:wrap;gap:10px}
+  .page-title{font-size:18px}
+  .section{padding:14px 16px}
+  .summary-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px}
+  .summary-value{font-size:16px}
+  .board-grid{grid-template-columns:1fr!important}
+  .table-wrap{overflow-x:auto}
+  table{min-width:600px}
+  .table-toolbar{flex-wrap:wrap;gap:6px}
+  .search-input{width:120px}
+  .period-columns{grid-template-columns:1fr!important}
+  .modal{width:95vw;padding:20px}
+  .form-row-2{grid-template-columns:1fr!important}
+  .tabs{overflow-x:auto;white-space:nowrap}
+  .btn-primary{padding:8px 14px;font-size:13px}
+}
+@media (max-width: 480px) {
+  .summary-grid{grid-template-columns:1fr!important}
+  .filter-btn{font-size:11.5px;padding:4px 8px}
+  .page-title{font-size:16px}
+}
+
+#lock-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.lock-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:48px 40px;width:360px;max-width:90vw;
+  text-align:center;
+}
+.lock-icon{font-size:48px;margin-bottom:16px}
+.lock-title{font-size:22px;font-weight:700;margin-bottom:6px}
+.lock-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.lock-input{
+  width:100%;padding:12px 16px;border:1px solid var(--border);
+  border-radius:var(--rs);font-size:16px;text-align:center;
+  letter-spacing:4px;background:var(--surface);color:var(--text);
+  outline:none;font-family:inherit;margin-bottom:12px;
+  transition:border-color .15s;
+}
+.lock-input:focus{border-color:var(--accent-dark)}
+.lock-btn{
+  width:100%;padding:12px;background:var(--accent);color:var(--text);
+  border:none;border-radius:var(--rs);font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.lock-btn:hover{background:var(--accent-dark);color:#fff}
+.lock-error{font-size:13px;color:var(--expense);margin-top:10px;min-height:18px}
+.lock-hint{font-size:12px;color:var(--text3);margin-top:16px}
+</style>
+</head>
+<body>
+
+<div id="lock-screen">
+  <div class="lock-box">
+    <div class="lock-icon">💛</div>
+    <div class="lock-title">머니플래너</div>
+    <div class="lock-sub">비밀번호를 입력해주세요</div>
+    <input class="lock-input" id="lock-input" type="password" placeholder="••••" maxlength="20"
+      onkeydown="if(event.key==='Enter')checkPassword()">
+    <button class="lock-btn" onclick="checkPassword()">입력</button>
+    <div class="lock-error" id="lock-error"></div>
+    <div class="lock-hint">💡 최초 비밀번호: 1234 (설정에서 변경 가능)</div>
+  </div>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">💛 머니플래너</div>
+  <div class="logo-sub">쓰면 쓸수록 부자되는 습관 💰</div>
+  <button onclick="changePassword()" style="width:100%;padding:7px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">🔒 비밀번호 변경</button>
+
+  <div class="nav-section">
+    <div class="nav-label">현금흐름</div>
+    <div class="nav-item active" onclick="showPage('ledger',this)"><span class="nav-icon">📒</span>일일 가계부</div>
+    <div class="nav-item" onclick="showPage('board',this)"><span class="nav-icon">📊</span>머니보드</div>
+    <div class="nav-item" onclick="showPage('calendar',this)"><span class="nav-icon">📅</span>머니 캘린더</div>
+    <div class="nav-item" onclick="showPage('period',this)"><span class="nav-icon">🔍</span>기간별 세부현황</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">분석</div>
+    <div class="nav-item" onclick="showPage('category',this)"><span class="nav-icon">🏷️</span>카테고리별</div>
+    <div class="nav-item" onclick="showPage('payment',this)"><span class="nav-icon">💳</span>수단별 지출</div>
+    <div class="nav-item" onclick="showPage('fixed',this)"><span class="nav-icon">📌</span>고정비</div>
+    <div class="nav-item" onclick="showPage('challenge',this)"><span class="nav-icon">🎯</span>이달의 머니챌</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">자산관리</div>
+    <div class="nav-item" onclick="showPage('loan',this)"><span class="nav-icon">🏠</span>대출</div>
+    <div class="nav-item" onclick="showPage('insurance',this)"><span class="nav-icon">🛡️</span>보험</div>
+    <div class="nav-item" onclick="showPage('savings',this)"><span class="nav-icon">💰</span>예적금</div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- 일일 가계부 -->
+<div id="page-ledger" class="page active">
+  <div class="page-header">
+    <div><div class="page-title">📒 일일 가계부</div><div class="page-sub">일별 수입/지출 내역을 입력하고 관리하는 페이지예요.</div></div>
+    <button class="btn-primary" onclick="openModal()">+ 새로 만들기</button>
+  </div>
+  <div class="section">
+    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="summary-card"><div class="summary-label">이번달 수입</div><div class="summary-value income" id="sum-income">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">이번달 지출</div><div class="summary-value expense" id="sum-expense">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">저축</div><div class="summary-value saving" id="sum-saving">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="sum-invest" style="color:#2d7a2d">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="sum-loan-pay" style="color:#c06000">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">잔액 (수입-지출)</div><div class="summary-value" id="sum-balance">₩0</div></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <button class="filter-btn active" onclick="filterType('all',this)">전체</button>
+        <button class="filter-btn" onclick="filterType('수입',this)">💚 수입</button>
+        <button class="filter-btn" onclick="filterType('지출',this)">🍔 지출</button>
+        <button class="filter-btn" onclick="filterType('저축',this)">🏦 저축</button>
+        <button class="filter-btn" onclick="filterType('투자',this)">📈 투자</button>
+        <button class="filter-btn" onclick="filterType('대출상환',this)">🏠 대출상환</button>
+        <div class="spacer"></div>
+        <input class="search-input" type="text" placeholder="🔍 검색..." oninput="searchTable(this.value)">
+      </div>
+      <table><thead><tr><th>세부내역</th><th>날짜</th><th style="text-align:right">금액</th><th>카테고리</th><th>수단</th><th>고정비</th><th>구분</th><th>메모</th><th></th></tr></thead>
+      <tbody id="ledger-tbody"></tbody></table>
+      <div class="load-more" id="load-more-btn" onclick="loadMore()">더 보기 ↓</div>
+    </div>
+  </div>
+</div>
+
+<!-- 머니보드 -->
+<div id="page-board" class="page">
+  <div class="page-header"><div><div class="page-title">📊 머니보드</div><div class="page-sub">이번달 재정현황을 한눈에 확인하세요.</div></div></div>
+  <div class="section">
+    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="summary-card"><div class="summary-label">이번달 수입</div><div class="summary-value income" id="bd-income">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">이번달 지출</div><div class="summary-value expense" id="bd-expense">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">저축</div><div class="summary-value saving" id="bd-saving">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="bd-invest" style="color:#2d7a2d">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="bd-loan" style="color:#c06000">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">오늘 지출</div><div class="summary-value expense" id="bd-today">₩0</div></div>
+    </div>
+    <div class="board-grid">
+      <div class="board-card">
+        <div class="board-card-title">🍩 이달의 지출 대시보드</div>
+        <div style="position:relative;height:260px"><canvas id="donutChart" role="img" aria-label="카테고리별 지출 도넛 차트">카테고리별 지출</canvas></div>
+        <div id="donut-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;font-size:11.5px;color:var(--text2)"></div>
+      </div>
+      <div class="board-card">
+        <div class="board-card-title">📈 월별 트렌드 (최근 6개월)</div>
+        <div style="position:relative;height:260px"><canvas id="trendChart" role="img" aria-label="월별 수입/지출 트렌드">월별 수입/지출 추이</canvas></div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:11.5px">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#2d9e75;display:inline-block;border-radius:2px"></span>수입</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#d85a30;display:inline-block;border-radius:2px"></span>지출</span>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-card-title">💳 카드/현금 지출 현황 (카테고리×수단)</div>
+        <div id="hbar-wrap" style="position:relative"><canvas id="hbarChart" role="img" aria-label="카테고리별 수단 지출">카테고리별 수단 지출</canvas></div>
+      </div>
+      <div class="board-card">
+        <div class="board-card-title">📌 고정비 현황</div>
+        <div id="fixed-chart-wrap" style="position:relative"><canvas id="fixedChart" role="img" aria-label="고정비 현황">고정비 현황</canvas></div>
+      </div>
+      <div class="board-card full">
+        <div class="board-card-title">📋 구분별 현황</div>
+        <table><thead><tr><th>구분</th><th style="text-align:right">오늘 합계</th><th style="text-align:right">이번달 합계</th><th style="text-align:right">올해 합계</th></tr></thead>
+        <tbody id="division-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 머니 캘린더 -->
+<div id="page-calendar" class="page">
+  <div class="page-header">
+    <div><div class="page-title">📅 머니 캘린더</div><div class="page-sub">날짜별 수입/지출을 캘린더로 확인하세요.</div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn-cancel" onclick="changeMonth(-1)">‹</button>
+      <span id="cal-title" style="font-weight:600;font-size:15px"></span>
+      <button class="btn-cancel" onclick="changeMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="section">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface2)">
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">일</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">월</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">화</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">수</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">목</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">금</div>
+        <div style="padding:10px;text-align:center;font-size:12px;font-weight:600;color:var(--text3)">토</div>
+      </div>
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 기간별 세부현황 -->
+<div id="page-period" class="page">
+  <div class="page-header"><div><div class="page-title">🔍 기간별 세부현황</div><div class="page-sub">특정 연도 또는 월 단위로 조회할 수 있어요. (예: 2026 또는 2026.04)</div></div></div>
+  <div class="section">
+    <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+      <input class="form-input" id="period-input" type="text" placeholder="2026.04" style="width:180px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;background:var(--surface);color:var(--text);outline:none;font-family:inherit">
+      <button class="btn-primary" onclick="renderPeriod()">조회</button>
+    </div>
+    <div id="period-columns" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"></div>
+  </div>
+</div>
+
+<!-- 카테고리별 -->
+<div id="page-category" class="page">
+  <div class="page-header"><div><div class="page-title">🏷️ 카테고리별 현황</div><div class="page-sub">카테고리별 수입/지출 합계예요.</div></div></div>
+  <div class="section">
+    <div class="table-wrap"><table><thead><tr><th>카테고리</th><th>구분</th><th style="text-align:right">오늘 합계</th><th style="text-align:right">이번달 합계</th><th style="text-align:right">올해 합계</th></tr></thead>
+    <tbody id="cat-table"></tbody></table></div>
+  </div>
+</div>
+
+<!-- 수단별 지출 -->
+<div id="page-payment" class="page">
+  <div class="page-header"><div><div class="page-title">💳 수단별 지출 현황</div><div class="page-sub">결제 수단별 이번달 지출 현황이에요.</div></div></div>
+  <div class="section">
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-label">신용카드</div><div class="summary-value expense" id="pay-신용카드">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">현금</div><div class="summary-value income" id="pay-현금">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">모임통장</div><div class="summary-value saving" id="pay-모임통장">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">체크카드</div><div class="summary-value" id="pay-체크카드">₩0</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>세부내역</th><th>날짜</th><th style="text-align:right">금액</th><th>카테고리</th><th>수단</th></tr></thead>
+    <tbody id="pay-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- 고정비 -->
+<div id="page-fixed" class="page">
+  <div class="page-header"><div><div class="page-title">📌 고정비 현황</div><div class="page-sub">이번달 고정비 항목이에요.</div></div></div>
+  <div class="section">
+    <div class="summary-grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="summary-card"><div class="summary-label">이번달 고정비 합계</div><div class="summary-value expense" id="fixed-total">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">고정비 항목 수</div><div class="summary-value" id="fixed-count">0건</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>세부내역</th><th>날짜</th><th style="text-align:right">금액</th><th>카테고리</th><th>수단</th><th>메모</th></tr></thead>
+    <tbody id="fixed-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- 머니챌 -->
+<div id="page-challenge" class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">🎯 이달의 머니챌</div>
+      <div class="page-sub">카테고리별 월 목표금액을 설정하고, 실제 사용금액과 비교해보세요.</div>
+    </div>
+    <button class="btn-primary" onclick="saveGoals()">💾 목표 저장</button>
+  </div>
+  <div class="section">
+    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="summary-card"><div class="summary-label">목표 설정 항목</div><div class="summary-value" id="ch-count" style="color:var(--accent-dark)">0개</div></div>
+      <div class="summary-card"><div class="summary-label">목표 달성 항목</div><div class="summary-value income" id="ch-ok">0개</div></div>
+      <div class="summary-card"><div class="summary-label">목표 초과 항목</div><div class="summary-value expense" id="ch-over">0개</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>구분</th><th>카테고리</th>
+          <th style="text-align:right">월 목표금액</th>
+          <th style="text-align:right">이번달 합계</th>
+          <th>달성률</th>
+          <th>머니봇 알림</th>
+        </tr></thead>
+        <tbody id="ch-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 대출 한판 -->
+<div id="page-loan" class="page">
+  <div class="page-header">
+    <div><div class="page-title">🏠 대출 한판</div><div class="page-sub">대출 관리의 모든 것을 한눈에 정리해볼 수 있는 공간이에요.</div></div>
+    <button class="btn-primary" onclick="openLoanModal()">+ 대출 추가</button>
+  </div>
+  <div class="section">
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-label">총 대출 건수</div><div class="summary-value" id="loan-count" style="color:var(--text)">0건</div></div>
+      <div class="summary-card"><div class="summary-label">총 대출 원금</div><div class="summary-value expense" id="loan-total">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">총 대출 이자</div><div class="summary-value expense" id="loan-interest">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">평균 금리</div><div class="summary-value saving" id="loan-rate">0%</div></div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>상품명</th><th>대출상품</th><th>상환방식</th>
+        <th style="text-align:right">기간(년)</th>
+        <th>시작일</th><th>만기일</th>
+        <th style="text-align:right">대출원금</th>
+        <th style="text-align:right">금리</th>
+        <th style="text-align:right">총 이자</th>
+        <th>상환 현황</th>
+        <th>월 상환액 알림</th>
+        <th></th>
+      </tr></thead><tbody id="loan-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- 보험 현황 -->
+<div id="page-insurance" class="page">
+  <div class="page-header">
+    <div><div class="page-title">🛡️ 보험 현황</div><div class="page-sub">나의 보험 현황을 한눈에 관리하세요.</div></div>
+    <button class="btn-primary" onclick="openInsModal()">+ 보험 추가</button>
+  </div>
+  <div class="section">
+    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="summary-card"><div class="summary-label">가입 보험 수</div><div class="summary-value" id="ins-count" style="color:var(--text)">0건</div></div>
+      <div class="summary-card"><div class="summary-label">월 총 납입액</div><div class="summary-value expense" id="ins-monthly">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">연간 납입액</div><div class="summary-value saving" id="ins-yearly">₩0</div></div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>상품명</th><th>보험사</th><th>계약상태</th><th>갱신</th><th>종류</th>
+        <th>계약일</th><th>만기일</th>
+        <th style="text-align:right">월 납입액</th>
+        <th style="text-align:right">납입년수</th>
+        <th>보장금액</th><th>특약</th>
+        <th></th>
+      </tr></thead><tbody id="ins-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- 예적금 한판 -->
+<div id="page-savings" class="page">
+  <div class="page-header">
+    <div><div class="page-title">💰 예적금 한판</div><div class="page-sub">어떤 목적으로 돈을 모으고 있는지 이 페이지에서 정리해보세요.</div></div>
+    <button class="btn-primary" onclick="openSavModal()">+ 예적금 추가</button>
+  </div>
+  <div class="section">
+    <div class="summary-grid">
+      <div class="summary-card"><div class="summary-label">가입 상품 수</div><div class="summary-value" id="sav-count" style="color:var(--text)">0건</div></div>
+      <div class="summary-card"><div class="summary-label">월 납입 합계</div><div class="summary-value saving" id="sav-monthly">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">총 이자(세전)</div><div class="summary-value income" id="sav-interest">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">만기 예상 합계</div><div class="summary-value income" id="sav-maturity">₩0</div></div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr>
+        <th>상품명</th><th>은행</th>
+        <th style="text-align:right">월 납입액</th>
+        <th style="text-align:right">이자율</th>
+        <th style="text-align:right">개월수</th>
+        <th>개설일</th><th>만기일</th>
+        <th>만기율</th>
+        <th style="text-align:right">이자(세전)</th>
+        <th style="text-align:right">만기예상액</th>
+        <th>저축목표</th>
+        <th></th>
+      </tr></thead><tbody id="sav-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">✏️ 새 거래 입력</div>
+    <div class="form-row"><label class="form-label">세부내역 *</label><input class="form-input" id="f-name" type="text" placeholder="예: 스타벅스, 쿠팡..."></div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">날짜 *</label><input class="form-input" id="f-date" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">금액 *</label><input class="form-input" id="f-amount" type="number" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">카테고리</label>
+        <select class="form-select" id="f-category">
+          <option value="">선택</option>
+          <optgroup label="수입"><option>급여소득</option><option>보험금</option><option>예적금 이자</option><option>주식 매도/배당</option><option>기타수입</option><option>더치페이</option><option>생활비</option></optgroup>
+          <optgroup label="지출"><option>식비</option><option>배달</option><option>간식</option><option>커피</option><option>편의점</option><option>통신비</option><option>차량/주유/교통비</option><option>의료비/보험료</option><option>패션</option><option>생필품</option><option>미용</option><option>여행</option><option>선물</option><option>여가비</option><option>구독서비스</option><option>경조사비</option><option>기타지출</option></optgroup>
+          <optgroup label="저축"><option>예적금</option><option>청약</option><option>보험</option><option>모임통장</option></optgroup>
+          <optgroup label="투자"><option>주식/ETF</option><option>코인</option><option>부동산</option><option>기타투자</option></optgroup>
+          <optgroup label="대출상환"><option>대출상환</option><option>카드대금</option><option>이자납부</option></optgroup>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">수단</label>
+        <select class="form-select" id="f-payment"><option>현금</option><option>체크카드</option><option>신용카드</option><option>모임통장</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">구분 *</label>
+        <select class="form-select" id="f-type"><option>지출</option><option>수입</option><option>저축</option><option>투자</option><option>대출상환</option></select>
+      </div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">고정비</label>
+        <select class="form-select" id="f-fixed"><option value="false">아니오</option><option value="true">예</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">메모</label><input class="form-input" id="f-memo" type="text" placeholder="메모 입력..."></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="addTransaction()">저장</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- 대출 모달 -->
+<div class="modal-overlay" id="loan-modal" onclick="if(event.target.id==='loan-modal')closeLoanModal()">
+  <div class="modal">
+    <div class="modal-title" id="loan-modal-title">🏠 대출 추가</div>
+    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="l-name" type="text" placeholder="예: 신한은행 버팀목 전세자금대출"></div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">대출상품</label>
+        <select class="form-select" id="l-type"><option>주택대출</option><option>신용 대출</option><option>전세대출</option><option>사업자대출</option><option>기타</option></select>
+      </div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">상환방식</label>
+        <select class="form-select" id="l-repay"><option>만기 일시상환</option><option>원리금 균등상환</option><option>원금 균등상환</option><option>거치식</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">대출원금 (원) *</label><input class="form-input" id="l-principal" type="number" placeholder="160000000" min="0"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">금리 (%) *</label><input class="form-input" id="l-rate" type="number" step="0.01" placeholder="3.3" min="0"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">대출 시작일</label><input class="form-input" id="l-start" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">만기일</label><input class="form-input" id="l-end" type="date"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">대출기간 (년) *</label><input class="form-input" id="l-years" type="number" placeholder="2" min="1"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="l-memo" type="text" placeholder="메모"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeLoanModal()">취소</button>
+      <button class="btn-primary" onclick="addLoan()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보험 모달 -->
+<div class="modal-overlay" id="ins-modal" onclick="if(event.target.id==='ins-modal')closeInsModal()">
+  <div class="modal">
+    <div class="modal-title" id="ins-modal-title">🛡️ 보험 추가</div>
+    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="i-name" type="text" placeholder="예: KB탑클래스 건강보험"></div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">보험사</label><input class="form-input" id="i-company" type="text" placeholder="KB손해보험"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">보험종류</label>
+        <select class="form-select" id="i-kind"><option>건강보험</option><option>실손보험</option><option>생명보험</option><option>자동차보험</option><option>화재보험</option><option>기타</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">계약상태</label>
+        <select class="form-select" id="i-status"><option>납입중</option><option>완납</option><option>해지</option></select>
+      </div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">갱신여부</label>
+        <select class="form-select" id="i-renew"><option>갱신</option><option>비갱신</option><option>혼합</option></select>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">계약일</label><input class="form-input" id="i-start" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">만기일</label><input class="form-input" id="i-end" type="date"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">월 납입액 (원) *</label><input class="form-input" id="i-monthly" type="number" placeholder="109209" min="0"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">납입년수</label><input class="form-input" id="i-years" type="number" placeholder="30" min="0"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">보장금액</label><input class="form-input" id="i-coverage" type="text" placeholder="암진단비 (3억원)"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">특약</label><input class="form-input" id="i-special" type="text" placeholder="크라운 보장 (2천만원)"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeInsModal()">취소</button>
+      <button class="btn-primary" onclick="addInsurance()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 예적금 모달 -->
+<div class="modal-overlay" id="sav-modal" onclick="if(event.target.id==='sav-modal')closeSavModal()">
+  <div class="modal">
+    <div class="modal-title" id="sav-modal-title">💰 예적금 추가</div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">상품명 *</label><input class="form-input" id="s-name" type="text" placeholder="하나은행 적금"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">은행명</label><input class="form-input" id="s-bank" type="text" placeholder="하나은행"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">월 납입액 (원) *</label><input class="form-input" id="s-monthly" type="number" placeholder="100000" min="0"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">이자율 (%)</label><input class="form-input" id="s-rate" type="number" step="0.01" placeholder="3.8" min="0"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">개설일</label><input class="form-input" id="s-start" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">만기일</label><input class="form-input" id="s-end" type="date"></div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">저축목표</label><input class="form-input" id="s-goal" type="text" placeholder="여행자금, 비상금..."></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="s-memo" type="text" placeholder="메모"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeSavModal()">취소</button>
+      <button class="btn-primary" onclick="addSavings()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLE=[{"id": 1, "name": "정기이자", "date": "2026-04-01", "amount": 1, "category": "예적금 이자", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 2, "name": "더치페이", "date": "2026-04-01", "amount": 12370, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 3, "name": "카카오페이 (이송이)", "date": "2026-04-01", "amount": 57000, "category": "선물", "payment": "현금", "fixed": false, "type": "지출", "memo": "지은 선물 (위칙)_롯데홈쇼핑"}, {"id": 4, "name": "조진주", "date": "2026-04-01", "amount": 20000, "category": "모임통장", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": "가람"}, {"id": 5, "name": "토스페이", "date": "2026-04-01", "amount": 29900, "category": "배달", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 6, "name": "지그재그", "date": "2026-04-02", "amount": 33250, "category": "패션", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 7, "name": "쌀국수", "date": "2026-04-02", "amount": 10500, "category": "식비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 8, "name": "일산병원", "date": "2026-04-02", "amount": 10100, "category": "의료비/보험료", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "혈액검사"}, {"id": 9, "name": "권민우 네일", "date": "2026-04-02", "amount": 57000, "category": "미용", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 10, "name": "안세빈", "date": "2026-04-02", "amount": 52680, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 11, "name": "세븐일레븐", "date": "2026-04-02", "amount": 7900, "category": "편의점", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 12, "name": "김수영", "date": "2026-04-02", "amount": 52680, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 13, "name": "이송이", "date": "2026-04-02", "amount": 52680, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 14, "name": "백지수", "date": "2026-04-02", "amount": 52680, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 15, "name": "CU", "date": "2026-04-03", "amount": 6100, "category": "편의점", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 16, "name": "던킨도너츠", "date": "2026-04-03", "amount": 5000, "category": "간식", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 17, "name": "스타벅스", "date": "2026-04-03", "amount": 16400, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 18, "name": "후쿠오카 버스", "date": "2026-04-03", "amount": 15, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "버스비"}, {"id": 19, "name": "후쿠오카 택시", "date": "2026-04-03", "amount": 21900, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 20, "name": "돈키호테", "date": "2026-04-03", "amount": 249863, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 21, "name": "스투시", "date": "2026-04-04", "amount": 91040, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "오빠 선물 (티셔츠)"}, {"id": 22, "name": "몽벨", "date": "2026-04-04", "amount": 48878, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "숄더백"}, {"id": 23, "name": "칼디", "date": "2026-04-04", "amount": 25248, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "스프레드, 커피"}, {"id": 24, "name": "이모야 킨지로", "date": "2026-04-04", "amount": 5266, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 25, "name": "다이소", "date": "2026-04-04", "amount": 2106, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 26, "name": "다이소", "date": "2026-04-04", "amount": 8426, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 27, "name": "GU", "date": "2026-04-04", "amount": 65349, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 28, "name": "돈키호테", "date": "2026-04-04", "amount": 10013, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 29, "name": "홍주연", "date": "2026-04-04", "amount": 60000, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 30, "name": "로손", "date": "2026-04-04", "amount": 5067, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 31, "name": "돈키호테", "date": "2026-04-04", "amount": 26667, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 32, "name": "신한카드", "date": "2026-04-05", "amount": 90376, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 33, "name": "몽벨", "date": "2026-04-05", "amount": 59426, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "백팩"}, {"id": 34, "name": "휴먼메이드", "date": "2026-04-05", "amount": 178264, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "티셔츠, 모자"}, {"id": 35, "name": "이지은", "date": "2026-04-05", "amount": 12900, "category": "여행", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 36, "name": "세븐일레븐", "date": "2026-04-05", "amount": 7372, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 37, "name": "무인양품", "date": "2026-04-05", "amount": 23767, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 38, "name": "돈키호테", "date": "2026-04-05", "amount": 60434, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 39, "name": "김송연", "date": "2026-04-05", "amount": 70000, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 40, "name": "후쿠오카 버스", "date": "2026-04-05", "amount": 15, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 41, "name": "후쿠오카 공항", "date": "2026-04-05", "amount": 49840, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "오빠 담배 심부름"}, {"id": 42, "name": "세븐일레븐", "date": "2026-04-05", "amount": 35277, "category": "여행", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 43, "name": "인천공항 주차", "date": "2026-04-05", "amount": 1800, "category": "차량/주유/교통비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 44, "name": "롯데홈쇼핑", "date": "2026-04-06", "amount": 235000, "category": "급여소득", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 45, "name": "카카오페이", "date": "2026-04-06", "amount": 2, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 46, "name": "이지은", "date": "2026-04-06", "amount": 12766, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 47, "name": "이지은", "date": "2026-04-06", "amount": 6000, "category": "여행", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 48, "name": "홍주연", "date": "2026-04-06", "amount": 12766, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 49, "name": "면화손칼국수", "date": "2026-04-06", "amount": 10000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 50, "name": "네이버페이", "date": "2026-04-06", "amount": 34900, "category": "식비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "링티 레몬라이트"}, {"id": 51, "name": "네이버페이", "date": "2026-04-06", "amount": 19374, "category": "패션", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "폰 케이스"}, {"id": 52, "name": "정환주", "date": "2026-04-06", "amount": 50000, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 53, "name": "카카오뱅크", "date": "2026-04-07", "amount": 5, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 54, "name": "APPLE", "date": "2026-04-07", "amount": 2900, "category": "구독서비스", "payment": "신용카드", "fixed": true, "type": "지출", "memo": "톡서랍 구독"}, {"id": 55, "name": "메가커피", "date": "2026-04-07", "amount": 4000, "category": "커피", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 56, "name": "신한카드", "date": "2026-04-07", "amount": 53461, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 57, "name": "토스페이", "date": "2026-04-07", "amount": 27000, "category": "배달", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 58, "name": "주식회사 카카오", "date": "2026-04-08", "amount": 69000, "category": "선물", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "양푸름 생일선물 (분자)"}, {"id": 59, "name": "카카오뱅크", "date": "2026-04-07", "amount": 2, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 60, "name": "카카오뱅크", "date": "2026-04-07", "amount": 2, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 61, "name": "카카오뱅크", "date": "2026-04-07", "amount": 2, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 62, "name": "바스버거", "date": "2026-04-08", "amount": 10000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 63, "name": "로우커피", "date": "2026-04-08", "amount": 9000, "category": "커피", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 64, "name": "정환주", "date": "2026-04-08", "amount": 300000, "category": "생활비", "payment": "모임통장", "fixed": true, "type": "수입", "memo": ""}, {"id": 65, "name": "세븐일레븐", "date": "2026-04-08", "amount": 7900, "category": "편의점", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 66, "name": "오죽이네", "date": "2026-04-08", "amount": 65500, "category": "식비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "경훈+선여 익선동 모임"}, {"id": 67, "name": "해운대", "date": "2026-04-08", "amount": 75000, "category": "식비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "경훈+선여 익선동 모임"}, {"id": 68, "name": "원더브라", "date": "2026-04-09", "amount": 152100, "category": "생필품", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 69, "name": "메가커피", "date": "2026-04-09", "amount": 4000, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 70, "name": "오장동 함흥냉면", "date": "2026-04-09", "amount": 17000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 71, "name": "신세계 백화점 강남", "date": "2026-04-09", "amount": 20000, "category": "패션", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "왼그기그 티셔츠"}, {"id": 72, "name": "신세계 백화점 강남", "date": "2026-04-09", "amount": 11700, "category": "생필품", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "치약"}, {"id": 73, "name": "쿠팡", "date": "2026-04-09", "amount": 7890, "category": "구독서비스", "payment": "모임통장", "fixed": true, "type": "지출", "memo": "쿠팡와우 월회비"}, {"id": 74, "name": "쿠팡", "date": "2026-04-09", "amount": 166260, "category": "식비", "payment": "모임통장", "fixed": false, "type": "지출", "memo": "쿠팡 나중결제"}, {"id": 75, "name": "카카오페이", "date": "2026-04-09", "amount": 1, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 76, "name": "김선여", "date": "2026-04-09", "amount": 46833, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 77, "name": "박경훈", "date": "2026-04-09", "amount": 46833, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 78, "name": "세븐일레븐", "date": "2026-04-09", "amount": 11740, "category": "편의점", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 79, "name": "롯데홈쇼핑", "date": "2026-04-10", "amount": 12715414, "category": "급여소득", "payment": "현금", "fixed": false, "type": "수입", "memo": "신한퇴직연금"}, {"id": 80, "name": "삼성카드", "date": "2026-04-10", "amount": 2156511, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 81, "name": "신한카드", "date": "2026-04-10", "amount": 2213429, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 82, "name": "신한카드", "date": "2026-04-10", "amount": 1400000, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 83, "name": "롯데홈쇼핑", "date": "2026-04-10", "amount": 370450, "category": "급여소득", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 84, "name": "롯데홈쇼핑", "date": "2026-04-10", "amount": 10000000, "category": "대출금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 85, "name": "네이버페이", "date": "2026-04-10", "amount": 27900, "category": "생필품", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "닥터포헤어 앰플"}, {"id": 86, "name": "주식회사 팀플러스", "date": "2026-04-10", "amount": 80000, "category": "여가비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "티켓베이 야구 (LG:롯데)"}, {"id": 87, "name": "카카오페이", "date": "2026-04-10", "amount": 35000, "category": "배달", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 88, "name": "일산병원", "date": "2026-04-11", "amount": 13900, "category": "의료비/보험료", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "진료비"}, {"id": 89, "name": "일산병원", "date": "2026-04-11", "amount": 41800, "category": "의료비/보험료", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "초음파검사"}, {"id": 90, "name": "메디팜약국", "date": "2026-04-11", "amount": 59500, "category": "의료비/보험료", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 91, "name": "정환주", "date": "2026-04-11", "amount": 200000, "category": "식비", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 92, "name": "쿠팡이츠", "date": "2026-04-12", "amount": 29500, "category": "배달", "payment": "모임통장", "fixed": false, "type": "지출", "memo": ""}, {"id": 93, "name": "쿠팡이츠", "date": "2026-04-12", "amount": 2000, "category": "기타수입", "payment": "모임통장", "fixed": false, "type": "수입", "memo": "환불"}, {"id": 94, "name": "신한은행", "date": "2026-04-13", "amount": 448430, "category": "대출금", "payment": "현금", "fixed": true, "type": "저축투자상환", "memo": "전세대출 이자"}, {"id": 95, "name": "롯데홈쇼핑", "date": "2026-04-13", "amount": 10000000, "category": "대출금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 96, "name": "메가커피", "date": "2026-04-13", "amount": 4000, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 97, "name": "카카오뱅크", "date": "2026-04-13", "amount": 1, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 98, "name": "쿠팡", "date": "2026-04-13", "amount": 23640, "category": "식비", "payment": "모임통장", "fixed": false, "type": "지출", "memo": ""}, {"id": 99, "name": "신한카드", "date": "2026-04-13", "amount": 56770, "category": "차량/주유/교통비", "payment": "현금", "fixed": true, "type": "지출", "memo": "기후동행카드"}, {"id": 100, "name": "신한카드", "date": "2026-04-14", "amount": 1013926, "category": "카드대금", "payment": "현금", "fixed": false, "type": "저축투자상환", "memo": ""}, {"id": 101, "name": "메가커피", "date": "2026-04-15", "amount": 4000, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 102, "name": "이은진", "date": "2026-04-15", "amount": 251847, "category": "주식 매도/배당", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 103, "name": "공여사들", "date": "2026-04-15", "amount": 54000, "category": "구독서비스", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "가계부 노션 템플릿 구매"}, {"id": 104, "name": "젠틀커피", "date": "2026-04-15", "amount": 3300, "category": "커피", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 105, "name": "아모제푸드", "date": "2026-04-15", "amount": 28300, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "잠실원샷"}, {"id": 106, "name": "GS25", "date": "2026-04-15", "amount": 14000, "category": "편의점", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 107, "name": "변영희", "date": "2026-04-16", "amount": 61150, "category": "더치페이", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 108, "name": "메가커피", "date": "2026-04-16", "amount": 4000, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 109, "name": "멘야코노하", "date": "2026-04-16", "amount": 10000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 110, "name": "티퍼런스", "date": "2026-04-17", "amount": 19800, "category": "생필품", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "콤부차 구입 (50% 세일)"}, {"id": 111, "name": "물", "date": "2026-04-17", "amount": 1000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "자판기"}, {"id": 112, "name": "등촌칼국수", "date": "2026-04-17", "amount": 20000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 113, "name": "택시", "date": "2026-04-17", "amount": 11900, "category": "차량/주유/교통비", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 114, "name": "GS25", "date": "2026-04-17", "amount": 14500, "category": "편의점", "payment": "현금", "fixed": false, "type": "지출", "memo": "상쾌한 지름신"}, {"id": 115, "name": "쿠팡이츠", "date": "2026-04-18", "amount": 14200, "category": "배달", "payment": "모임통장", "fixed": false, "type": "지출", "memo": "버거킹"}, {"id": 116, "name": "쿠팡이츠", "date": "2026-04-18", "amount": 18000, "category": "배달", "payment": "모임통장", "fixed": false, "type": "지출", "memo": "냉면"}, {"id": 117, "name": "케이뱅크", "date": "2026-04-18", "amount": 1, "category": "기타수입", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 118, "name": "쿠팡이츠", "date": "2026-04-18", "amount": 23400, "category": "배달", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "마라탕"}, {"id": 119, "name": "쿠팡이츠", "date": "2026-04-18", "amount": 21300, "category": "배달", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "초밥"}, {"id": 120, "name": "쿠팡이츠", "date": "2026-04-19", "amount": 21600, "category": "배달", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "피자"}, {"id": 121, "name": "정환주", "date": "2026-04-19", "amount": 300000, "category": "생활비", "payment": "현금", "fixed": false, "type": "수입", "memo": ""}, {"id": 122, "name": "지그재그", "date": "2026-04-19", "amount": 36880, "category": "패션", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 123, "name": "올리브영", "date": "2026-04-19", "amount": 41000, "category": "생필품", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 124, "name": "인형뽑기", "date": "2026-04-19", "amount": 3000, "category": "기타지출", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 125, "name": "네이버페이", "date": "2026-04-19", "amount": 20000, "category": "미용", "payment": "신용카드", "fixed": false, "type": "지출", "memo": "네일 예약금"}, {"id": 126, "name": "세븐일레븐", "date": "2026-04-19", "amount": 1700, "category": "편의점", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 127, "name": "김의준", "date": "2026-04-20", "amount": 15000, "category": "기타지출", "payment": "현금", "fixed": false, "type": "지출", "memo": "야구게임"}, {"id": 128, "name": "메가커피", "date": "2026-04-20", "amount": 4000, "category": "커피", "payment": "현금", "fixed": false, "type": "지출", "memo": ""}, {"id": 129, "name": "쿠팡", "date": "2026-04-20", "amount": 112020, "category": "식비", "payment": "모임통장", "fixed": false, "type": "지출", "memo": "나중결제"}, {"id": 130, "name": "이응", "date": "2026-04-20", "amount": 11000, "category": "식비", "payment": "체크카드", "fixed": false, "type": "지출", "memo": "돼지국밥"}, {"id": 131, "name": "토스페이", "date": "2026-04-20", "amount": 21400, "category": "배달", "payment": "모임통장", "fixed": false, "type": "지출", "memo": "즉석떡볶이"}, {"id": 132, "name": "지그재그", "date": "2026-04-21", "amount": 35620, "category": "패션", "payment": "신용카드", "fixed": false, "type": "지출", "memo": ""}, {"id": 133, "name": "젠틀스트릿 커피", "date": "2026-04-21", "amount": 3000, "category": "커피", "payment": "체크카드", "fixed": false, "type": "지출", "memo": ""}];
+
+let transactions=JSON.parse(localStorage.getItem('dp_tx')||'null')||SAMPLE;
+let nextId=Math.max(...transactions.map(t=>t.id),0)+1;
+let currentFilter='all',currentSearch='',rowsToShow=15;
+let calMonth=new Date();calMonth.setDate(1);
+let donutChart=null,trendChart=null,hbarChart=null,fixedBarChart=null;
+
+const CAT_COLORS=['#f5a623','#d85a30','#e8855a','#d84066','#5b8dd9','#2d9e75','#8b6fd9','#e06090','#6699cc','#40b080','#c0892a','#9b59b6','#1abc9c','#e74c3c','#3498db','#f39c12','#27ae60'];
+
+function save(){try{localStorage.setItem('dp_tx',JSON.stringify(transactions))}catch(e){}}
+function fmt(n){return'₩'+Math.abs(Math.round(n)).toLocaleString('ko-KR')}
+function fmtDate(d){return d.replace(/-/g,'/').substring(2)}
+function todayStr(){return new Date().toISOString().slice(0,10)}
+function thisMonth(){return new Date().toISOString().slice(0,7)}
+function thisYear(){return new Date().getFullYear().toString()}
+function tagClass(p){if(p==='현금')return'tag tag-cash';if(p==='체크카드')return'tag tag-check';if(p==='신용카드')return'tag tag-credit';return'tag tag-group'}
+function typeClass(t){
+  if(t==='수입') return 'tag badge-income';
+  if(t==='저축투자상환'||t==='저축') return 'tag badge-saving';
+  if(t==='투자') return 'tag badge-invest';
+  if(t==='대출상환') return 'tag badge-loan';
+  return 'tag badge-expense';
+}
+function typeLabel(t){return t==='저축투자상환'?'저축':t==='대출상환'?'대출상환':t}
+
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  const m={ledger:renderLedger,board:renderBoard,calendar:renderCalendar,
+    period:()=>{document.getElementById('period-input').value=thisMonth().replace('-','.');renderPeriod()},
+    category:renderCategory,payment:renderPayment,fixed:renderFixed,challenge:renderChallenge,
+    loan:renderLoan,insurance:renderInsurance,savings:renderSavings};
+  if(m[name])m[name]();
+}
+
+function getFiltered(){
+  let list=[...transactions].sort((a,b)=>b.date.localeCompare(a.date));
+  if(currentFilter!=='all'){
+    if(currentFilter==='저축투자상환'){
+      list=list.filter(t=>t.type==='저축'||t.type==='투자'||t.type==='대출상환'||t.type==='저축투자상환');
+    } else {
+      list=list.filter(t=>t.type===currentFilter||(currentFilter==='저축'&&t.type==='저축투자상환'));
+    }
+  }
+  if(currentSearch){const s=currentSearch.toLowerCase();list=list.filter(t=>t.name.toLowerCase().includes(s)||(t.memo||'').toLowerCase().includes(s)||(t.category||'').toLowerCase().includes(s))}
+  return list;
+}
+
+function renderLedger(){
+  const month=thisMonth();let inc=0,exp=0,sav=0,inv=0,loan=0;
+  transactions.forEach(t=>{
+    if(!t.date.startsWith(month))return;
+    if(t.type==='수입')inc+=t.amount;
+    else if(t.type==='지출')exp+=t.amount;
+    else if(t.type==='저축'||t.type==='저축투자상환')sav+=t.amount;
+    else if(t.type==='투자')inv+=t.amount;
+    else if(t.type==='대출상환')loan+=t.amount;
+  });
+  document.getElementById('sum-income').textContent=fmt(inc);
+  document.getElementById('sum-expense').textContent=fmt(exp);
+  document.getElementById('sum-saving').textContent=fmt(sav);
+  if(document.getElementById('sum-invest'))document.getElementById('sum-invest').textContent=fmt(inv);
+  if(document.getElementById('sum-loan-pay'))document.getElementById('sum-loan-pay').textContent=fmt(loan);
+  const bal=inc-exp;const el=document.getElementById('sum-balance');
+  el.textContent=(bal<0?'-':'')+fmt(bal);el.style.color=bal<0?'var(--expense)':bal>0?'var(--income)':'var(--text)';
+  renderLedgerRows();
+}
+
+function renderLedgerRows(){
+  const list=getFiltered();
+  document.getElementById('ledger-tbody').innerHTML=list.slice(0,rowsToShow).map(t=>`
+    <tr onclick='editTransaction(${t.id})' style='cursor:pointer'><td class="cell-name">${t.name}</td><td class="date-cell">${fmtDate(t.date)}</td>
+    <td class="cell-amount ${t.type==='수입'?'income':t.type==='저축'||t.type==='저축투자상환'?'saving':t.type==='투자'?'invest':t.type==='대출상환'?'loan-pay':'expense'}">${t.type==='수입'?'+':'-'}${fmt(t.amount)}</td>
+    <td style="font-size:13px;color:var(--text2)">${t.category||'-'}</td>
+    <td><span class="${tagClass(t.payment)}">${t.payment}</span></td>
+    <td style="text-align:center">${t.fixed?'<span class="fixed-dot"></span>':''}</td>
+    <td><span class="${typeClass(t.type)}">${typeLabel(t.type)}</span></td>
+    <td class="cell-memo">${t.memo||''}</td>
+    <td style="padding:6px 10px;text-align:center;white-space:nowrap">
+      <button onclick="event.stopPropagation();editTransaction(${t.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 5px;border-radius:4px" title="수정">✎</button>
+      <button onclick="event.stopPropagation();deleteTransaction(${t.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 5px;border-radius:4px" title="삭제">✕</button>
+    </td></tr>`).join('');
+  document.getElementById('load-more-btn').style.display=list.length>rowsToShow?'block':'none';
+}
+
+function filterType(type,btn){currentFilter=type;rowsToShow=15;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLedgerRows()}
+function searchTable(val){currentSearch=val;rowsToShow=15;renderLedgerRows()}
+function loadMore(){rowsToShow+=15;renderLedgerRows()}
+
+function renderBoard(){
+  const today=todayStr(),month=thisMonth(),year=thisYear();
+  let inc=0,exp=0,sav=0,inv=0,loanPay=0,todayExp=0;
+  transactions.forEach(t=>{
+    if(t.date.startsWith(month)){
+      if(t.type==='수입')inc+=t.amount;
+      else if(t.type==='지출')exp+=t.amount;
+      else if(t.type==='저축'||t.type==='저축투자상환')sav+=t.amount;
+      else if(t.type==='투자')inv+=t.amount;
+      else if(t.type==='대출상환')loanPay+=t.amount;
+    }
+    if(t.date===today&&t.type==='지출')todayExp+=t.amount;
+  });
+  document.getElementById('bd-income').textContent=fmt(inc);
+  document.getElementById('bd-expense').textContent=fmt(exp);
+  document.getElementById('bd-saving').textContent=fmt(sav);
+  if(document.getElementById('bd-invest'))document.getElementById('bd-invest').textContent=fmt(inv);
+  if(document.getElementById('bd-loan'))document.getElementById('bd-loan').textContent=fmt(loanPay);
+  document.getElementById('bd-today').textContent=fmt(todayExp);
+
+  // Donut chart
+  const catMap={};
+  transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출').forEach(t=>{catMap[t.category||'기타']=(catMap[t.category||'기타']||0)+t.amount});
+  const catE=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  const total=catE.reduce((s,[,v])=>s+v,0);
+  if(donutChart)donutChart.destroy();
+  donutChart=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:catE.map(e=>e[0]),datasets:[{data:catE.map(e=>e[1]),backgroundColor:CAT_COLORS.slice(0,catE.length),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const pct=((ctx.raw/total)*100).toFixed(1);return` ${ctx.label}: ${fmt(ctx.raw)} (${pct}%)`}}}}},
+    plugins:[{id:'c',afterDraw(chart){
+      const{ctx,chartArea:{width,height,left,top}}=chart;ctx.save();
+      const cx=left+width/2,cy=top+height/2;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font='bold 20px Pretendard,sans-serif';ctx.fillStyle='#1a1a18';ctx.fillText(fmt(total),cx,cy-10);
+      ctx.font='12px Pretendard,sans-serif';ctx.fillStyle='#9e9d96';ctx.fillText('합계 금액',cx,cy+14);ctx.restore();
+    }}]
+  });
+  document.getElementById('donut-legend').innerHTML=catE.map((e,i)=>`<span style="display:inline-flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:${CAT_COLORS[i%CAT_COLORS.length]};flex-shrink:0"></span>${e[0]}</span>`).join('');
+
+  // Trend
+  const months=[];for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);d.setDate(1);months.push(d.toISOString().slice(0,7))}
+  const tI=months.map(m=>transactions.filter(t=>t.date.startsWith(m)&&t.type==='수입').reduce((s,t)=>s+t.amount,0));
+  const tE=months.map(m=>transactions.filter(t=>t.date.startsWith(m)&&t.type==='지출').reduce((s,t)=>s+t.amount,0));
+  if(trendChart)trendChart.destroy();
+  trendChart=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:months.map(m=>m.slice(2).replace('-','/')),datasets:[
+      {label:'수입',data:tI,borderColor:'#2d9e75',backgroundColor:'rgba(45,158,117,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#2d9e75'},
+      {label:'지출',data:tE,borderColor:'#d85a30',backgroundColor:'rgba(216,90,48,.08)',fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#d85a30'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>'₩'+Math.round(v/10000)+'만',font:{size:11}},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  // Horizontal stacked bar: category × payment
+  const pays=['모임통장','신용카드','체크카드','현금'];
+  const pColors={'모임통장':'#8b6fd9','신용카드':'#d85a30','체크카드':'#5b8dd9','현금':'#2d9e75'};
+  const hCats=[...new Set(transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출').map(t=>t.category||'기타'))];
+  hCats.sort((a,b)=>{
+    const sa=transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&(t.category||'기타')===a).reduce((s,t)=>s+t.amount,0);
+    const sb=transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&(t.category||'기타')===b).reduce((s,t)=>s+t.amount,0);
+    return sb-sa;
+  });
+  const topC=hCats.slice(0,10);
+  const hH=Math.max(topC.length*42+80,180);
+  document.getElementById('hbar-wrap').style.height=hH+'px';
+  if(hbarChart)hbarChart.destroy();
+  hbarChart=new Chart(document.getElementById('hbarChart'),{
+    type:'bar',
+    data:{labels:topC,datasets:pays.map(p=>({label:p,data:topC.map(c=>transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&(t.category||'기타')===c&&t.payment===p).reduce((s,t)=>s+t.amount,0)),backgroundColor:pColors[p],barThickness:13}))},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},padding:10}}},
+      scales:{x:{stacked:true,ticks:{callback:v=>'₩'+Math.round(v/10000)+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}},y:{stacked:true,ticks:{font:{size:11}},grid:{display:false}}}}
+  });
+
+  // Fixed bar
+  const fMap={};
+  transactions.filter(t=>t.fixed&&t.date.startsWith(month)).forEach(t=>{fMap[t.category||t.name]=(fMap[t.category||t.name]||0)+t.amount});
+  const fL=Object.keys(fMap),fD=Object.values(fMap);
+  const fH=Math.max(fL.length*42+80,120);
+  document.getElementById('fixed-chart-wrap').style.height=fH+'px';
+  if(fixedBarChart)fixedBarChart.destroy();
+  fixedBarChart=new Chart(document.getElementById('fixedChart'),{
+    type:'bar',
+    data:{labels:fL,datasets:[{label:'고정비',data:fD,backgroundColor:'#8b6fd9',barThickness:14}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}},
+      scales:{x:{ticks:{callback:v=>'₩'+Math.round(v/10000)+'만',font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  // Division table
+  const div={'수입':{t:0,m:0,y:0},'지출':{t:0,m:0,y:0},'저축투자상환':{t:0,m:0,y:0}};
+  transactions.forEach(t=>{if(!div[t.type])return;if(t.date===today)div[t.type].t+=t.amount;if(t.date.startsWith(month))div[t.type].m+=t.amount;if(t.date.startsWith(year))div[t.type].y+=t.amount});
+  const dN={'수입':'💚 수입','지출':'🍔 지출','저축투자상환':'💙 저축/투자/상환상환'};
+  document.getElementById('division-table').innerHTML=Object.entries(div).map(([k,v])=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${dN[k]}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.t)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.m)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.y)}</td>
+    </tr>`).join('');
+}
+
+function renderCalendar(){
+  const y=calMonth.getFullYear(),m=calMonth.getMonth();
+  document.getElementById('cal-title').textContent=`${y}년 ${m+1}월`;
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  const cells=[];for(let i=0;i<first;i++)cells.push(null);for(let d=1;d<=days;d++)cells.push(d);
+  while(cells.length%7!==0)cells.push(null);
+  const now=new Date();
+  document.getElementById('cal-grid').innerHTML=cells.map(d=>{
+    if(!d)return'<div style="border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:80px"></div>';
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const tx=transactions.filter(t=>t.date===ds);
+    const inc=tx.filter(t=>t.type==='수입').reduce((s,t)=>s+t.amount,0);
+    const exp=tx.filter(t=>t.type==='지출').reduce((s,t)=>s+t.amount,0);
+    const isT=now.getMonth()===m&&now.getFullYear()===y&&now.getDate()===d;
+    return`<div class="cal-day" style="background:${isT?'rgba(245,200,66,.08)':''}">
+      <div style="font-size:13px;font-weight:${isT?700:500};color:${isT?'var(--accent-dark)':'var(--text)'};margin-bottom:4px">${d}</div>
+      ${inc>0?`<div style="font-size:11px;color:var(--income);margin-bottom:2px">+${fmt(inc)}</div>`:''}
+      ${exp>0?`<div style="font-size:11px;color:var(--expense)">-${fmt(exp)}</div>`:''}
+      ${tx.slice(0,2).map(t=>`<div style="font-size:10.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+function changeMonth(dir){calMonth.setMonth(calMonth.getMonth()+dir);renderCalendar()}
+
+function renderPeriod(){
+  const raw=document.getElementById('period-input').value.trim().replace('.','-');
+  if(!raw)return;
+  const isMonth=raw.length===7;
+  const txF=transactions.filter(t=>isMonth?t.date.startsWith(raw):t.date.startsWith(raw.substring(0,4)));
+  const cols=['저축투자상환','수입','지출'];
+  const colT={'저축투자상환':'💙 저축투자상환','수입':'💚 수입','지출':'🍔 지출'};
+  const colC={'저축투자상환':'var(--saving)','수입':'var(--income)','지출':'var(--expense)'};
+  const grouped={};cols.forEach(c=>{grouped[c]={}});
+  txF.forEach(t=>{if(!grouped[t.type])return;const cat=t.category||'기타';grouped[t.type][cat]=(grouped[t.type][cat]||0)+t.amount});
+  document.getElementById('period-columns').innerHTML=cols.map(col=>{
+    const cats=Object.entries(grouped[col]).sort((a,b)=>b[1]-a[1]);
+    const total=cats.reduce((s,[,v])=>s+v,0);
+    return`<div class="table-wrap">
+      <div class="period-col-title">${colT[col]}<span style="font-size:12px;font-weight:700;color:${colC[col]}">${fmt(total)}</span></div>
+      ${cats.length?cats.map(([cat,amt])=>`<div class="period-item"><div class="period-item-name">${cat}</div><div class="period-item-amt">${fmt(amt)}</div></div>`).join(''):'<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">내역 없음</div>'}
+    </div>`;
+  }).join('');
+}
+
+function renderCategory(){
+  const today=todayStr(),month=thisMonth(),year=thisYear();
+  const cats={};
+  transactions.forEach(t=>{const k=t.category||'기타';if(!cats[k])cats[k]={type:t.type,today:0,month:0,year:0};if(t.date===today)cats[k].today+=t.amount;if(t.date.startsWith(month))cats[k].month+=t.amount;if(t.date.startsWith(year))cats[k].year+=t.amount});
+  document.getElementById('cat-table').innerHTML=Object.entries(cats).sort((a,b)=>b[1].month-a[1].month).map(([k,v])=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${k}</td>
+      <td style="padding:10px 14px"><span class="${typeClass(v.type)}">${typeLabel(v.type)}</span></td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.today)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.month)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600">${fmt(v.year)}</td>
+    </tr>`).join('');
+}
+
+function renderPayment(){
+  const month=thisMonth();
+  ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
+    document.getElementById('pay-'+p).textContent=fmt(transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&t.payment===p).reduce((s,t)=>s+t.amount,0));
+  });
+  document.getElementById('pay-tbody').innerHTML=transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출').sort((a,b)=>b.date.localeCompare(a.date)).map(t=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${t.name}</td>
+      <td class="date-cell" style="padding:10px 14px">${fmtDate(t.date)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--expense)">-${fmt(t.amount)}</td>
+      <td style="padding:10px 14px;font-size:13px;color:var(--text2)">${t.category||'-'}</td>
+      <td style="padding:10px 14px"><span class="${tagClass(t.payment)}">${t.payment}</span></td>
+    </tr>`).join('');
+}
+
+function renderFixed(){
+  const month=thisMonth();
+  const list=transactions.filter(t=>t.fixed&&t.date.startsWith(month));
+  document.getElementById('fixed-total').textContent=fmt(list.reduce((s,t)=>s+t.amount,0));
+  document.getElementById('fixed-count').textContent=list.length+'건';
+  document.getElementById('fixed-tbody').innerHTML=list.map(t=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${t.name}</td>
+      <td class="date-cell" style="padding:10px 14px">${fmtDate(t.date)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--expense)">-${fmt(t.amount)}</td>
+      <td style="padding:10px 14px;font-size:13px;color:var(--text2)">${t.category||'-'}</td>
+      <td style="padding:10px 14px"><span class="${tagClass(t.payment)}">${t.payment}</span></td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text3)">${t.memo||''}</td>
+    </tr>`).join('');
+}
+
+let editingTxId=null;
+function openModal(id){
+  editingTxId=id||null;
+  const t=id?transactions.find(x=>x.id===id):null;
+  document.getElementById('modal-title').textContent=id?'✏️ 거래 수정':'✏️ 새 거래 입력';
+  document.getElementById('f-name').value=t?t.name:'';
+  document.getElementById('f-date').value=t?t.date:todayStr();
+  document.getElementById('f-amount').value=t?t.amount:'';
+  document.getElementById('f-category').value=t?t.category:'';
+  document.getElementById('f-payment').value=t?(t.payment||'현금'):'현금';
+  document.getElementById('f-type').value=t?t.type:'지출';
+  document.getElementById('f-fixed').value=t?(t.fixed?'true':'false'):'false';
+  document.getElementById('f-memo').value=t?t.memo:'';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),100);
+}
+function editTransaction(id){openModal(id)}
+function deleteTransaction(id){
+  if(!confirm('이 거래를 삭제할까요?'))return;
+  transactions=transactions.filter(t=>t.id!==id);
+  save();renderLedger();
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');editingTxId=null}
+function closeModalOutside(e){if(e.target.id==='modal-overlay')closeModal()}
+function addTransaction(){
+  const name=document.getElementById('f-name').value.trim();
+  const date=document.getElementById('f-date').value;
+  const amount=parseFloat(document.getElementById('f-amount').value);
+  if(!name||!date||isNaN(amount)||amount<=0){alert('이름, 날짜, 금액을 입력해주세요.');return}
+  const obj={name,date,amount,category:document.getElementById('f-category').value,payment:document.getElementById('f-payment').value,fixed:document.getElementById('f-fixed').value==='true',type:document.getElementById('f-type').value,memo:document.getElementById('f-memo').value.trim()};
+  if(editingTxId){
+    const idx=transactions.findIndex(x=>x.id===editingTxId);
+    if(idx>=0)transactions[idx]={...transactions[idx],...obj};
+  } else {
+    transactions.unshift({id:nextId++,...obj});
+  }
+  save();closeModal();renderLedger();
+}
+
+
+// ── Google Sheets 연동 (Apps Script) ──
+
+// ── 비밀번호 잠금 ──
+const DEFAULT_PW = '1234';
+function checkPassword(){
+  const input = document.getElementById('lock-input').value;
+  const saved = localStorage.getItem('mp_password') || DEFAULT_PW;
+  if(input === saved){
+    document.getElementById('lock-screen').style.display = 'none';
+    localStorage.setItem('mp_unlocked', Date.now());
+  } else {
+    document.getElementById('lock-error').textContent = '❌ 비밀번호가 틀렸어요';
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+    setTimeout(()=>document.getElementById('lock-error').textContent='', 2000);
+  }
+}
+
+function changePassword(){
+  const current = prompt('현재 비밀번호를 입력하세요:');
+  const saved = localStorage.getItem('mp_password') || DEFAULT_PW;
+  if(current !== saved){ alert('현재 비밀번호가 틀렸어요!'); return; }
+  const newPw = prompt('새 비밀번호를 입력하세요:');
+  if(!newPw){ alert('비밀번호를 입력해주세요!'); return; }
+  const confirm = prompt('새 비밀번호를 다시 입력하세요:');
+  if(newPw !== confirm){ alert('비밀번호가 일치하지 않아요!'); return; }
+  localStorage.setItem('mp_password', newPw);
+  alert('✅ 비밀번호가 변경됐어요!');
+}
+
+// 잠금 해제 상태 확인 (1시간 유지)
+(function(){
+  const unlocked = localStorage.getItem('mp_unlocked');
+  if(unlocked && Date.now() - parseInt(unlocked) < 3600000){
+    document.getElementById('lock-screen').style.display = 'none';
+  } else {
+    setTimeout(()=>document.getElementById('lock-input').focus(), 100);
+  }
+})();
+
+renderLedger();
+
+// ── 머니챌 ──
+const ALL_CATS=[
+  {type:'수입',cats:['급여소득','보험금','예적금 이자','주식 매도/배당','기타수입','더치페이','생활비']},
+  {type:'지출',cats:['식비','배달','간식','커피','편의점','통신비','차량/주유/교통비','의료비/보험료','패션','생필품','미용','여행','선물','여가비','구독서비스','경조사비','기타지출']},
+  {type:'저축',cats:['예적금','청약','보험','모임통장']},
+  {type:'투자',cats:['주식/ETF','코인','부동산','기타투자']},
+  {type:'대출상환',cats:['대출상환','카드대금','이자납부']},
+];
+let goals=JSON.parse(localStorage.getItem('dp_goals')||'{"급여소득": 3200000, "식비": 300000, "통신비": 15000, "차량/주유/교통비": 55000, "의료비/보험료": 200000, "패션": 100000, "경조사비": 100000, "배달": 150000, "화장품": 50000, "편의점": 20000, "간식": 30000, "커피": 50000, "구독서비스": 50000, "생활비": 3000, "생필품": 200000, "여가비": 100000}');
+
+function saveGoals(){
+  document.querySelectorAll('.goal-input').forEach(inp=>{
+    const cat=inp.dataset.cat;
+    const val=parseInt(inp.value.replace(/[^0-9]/g,''))||0;
+    if(val>0)goals[cat]=val;else delete goals[cat];
+  });
+  try{localStorage.setItem('dp_goals',JSON.stringify(goals))}catch(e){}
+  renderChallenge();
+  const btn=document.querySelector('[onclick="saveGoals()"]');
+  const orig=btn.textContent;btn.textContent='✅ 저장됨!';
+  setTimeout(()=>btn.textContent=orig,1200);
+}
+
+function botMsg(type,goal,act){
+  const diff=Math.abs(act-goal);
+  if(type==='수입'){
+    if(goal===0)return act>0?`예상보다 <span style="color:var(--income);font-weight:600">${act.toLocaleString()}원</span> 더 벌었어요. 정말 멋져요! 😎`:'';
+    if(act>=goal)return`예상보다 <span style="color:var(--income);font-weight:600">${(act-goal).toLocaleString()}원</span> 더 벌었어요. 정말 멋져요! 😎`;
+    return`아직 <span style="color:var(--text2);font-weight:600">${diff.toLocaleString()}원</span> 더 벌어야 해요. 화이팅! 💪`;
+  } else {
+    if(goal===0)return act>0?`벌써 <span style="color:var(--expense);font-weight:600">${act.toLocaleString()}원</span>이나 더 썼어요. 정신 차리세요! 🔴`:'';
+    if(act>goal)return`벌써 <span style="color:var(--expense);font-weight:600">${diff.toLocaleString()}원</span>이나 더 썼어요. 정신 차리세요! 🔴`;
+    return`아직 <span style="color:var(--income);font-weight:600">${diff.toLocaleString()}원</span>은 더 써도 돼요. 잘하고 있어요! 👍`;
+  }
+}
+
+function renderChallenge(){
+  const month=thisMonth();
+  const actual={};
+  transactions.filter(t=>t.date.startsWith(month)).forEach(t=>{actual[t.category||'기타']=(actual[t.category||'기타']||0)+t.amount});
+  let totalGoal=0,okCount=0,overCount=0;
+  Object.keys(goals).forEach(k=>{if(goals[k]>0)totalGoal++});
+  document.getElementById('ch-count').textContent=totalGoal+'개';
+  const rows=[];
+  ALL_CATS.forEach(({type,cats})=>{
+    cats.forEach(cat=>{
+      const goal=goals[cat]||0;const act=actual[cat]||0;
+      if(goal===0&&act===0)return;
+      rows.push({type,cat,goal,act});
+    });
+  });
+  rows.forEach(r=>{
+    if(r.type==='지출'&&r.goal>0){if(r.act<=r.goal)okCount++;else overCount++}
+    if(r.type==='수입'&&r.goal>0){if(r.act>=r.goal)okCount++}
+  });
+  document.getElementById('ch-ok').textContent=okCount+'개';
+  document.getElementById('ch-over').textContent=overCount+'개';
+  document.getElementById('ch-tbody').innerHTML=rows.map(({type,cat,goal,act})=>{
+    const isExp=type==='지출';
+    const pct=goal>0?Math.round(act/goal*100):(act>0?999:0);
+    const barColor=isExp?(act>goal?'var(--expense)':'var(--income)'):'var(--saving)';
+    const barW=Math.min(pct,100);
+    const msg=botMsg(type,goal,act);
+    const tL=type==='저축투자상환'?'저축':type;
+    const tC=type==='수입'?'badge-income':type==='저축투자상환'?'badge-saving':'badge-expense';
+    const amtColor=isExp?(act>goal?'var(--expense)':'var(--text)'):'var(--income)';
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px"><span class="tag ${tC}">${tL}</span></td>
+      <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${cat}</td>
+      <td style="padding:10px 14px;text-align:right">
+        <input class="goal-input" data-cat="${cat}" type="text"
+          value="${goal>0?goal.toLocaleString():''}" placeholder="목표 미설정"
+          style="width:130px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:right;background:var(--surface);color:var(--text);font-family:inherit;outline:none"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+          onfocus="this.style.borderColor='var(--accent-dark)'"
+          onblur="this.style.borderColor='var(--border)'">
+      </td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:${amtColor}">${fmt(act)}</td>
+      <td style="padding:10px 14px;min-width:130px">
+        ${goal>0?`<div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="width:${barW}%;height:100%;background:${barColor};border-radius:3px"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${isExp&&act>goal?'var(--expense)':'var(--text2)'};min-width:38px;text-align:right">${pct>999?'∞':pct}%</span>
+        </div>`:'<span style="font-size:12px;color:var(--text3)">-</span>'}
+      </td>
+      <td style="padding:10px 16px;font-size:12.5px;line-height:1.6">${msg||'<span style="color:var(--text3)">-</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 대출 한판 ──
+const LOAN_SAMPLE=[
+  {"id":1,"name":"케이뱅크 신용대출 플러스","type":"신용 대출","repay":"원리금 균등상환","years":5.0,"principal":20000000,"rate":6.61,"start":"2023-01-01","end":"2028-01-01","memo":""},
+  {"id":2,"name":"신한은행 버팀목 전세자금대출","type":"주택대출","repay":"만기 일시상환","years":2.0,"principal":160000000,"rate":3.3,"start":"2025-01-01","end":"2027-01-01","memo":""},
+  {"id":3,"name":"카카오뱅크 중신용대출","type":"신용 대출","repay":"원리금 균등상환","years":5.0,"principal":11600000,"rate":4.8,"start":"2023-01-01","end":"2028-01-01","memo":""},
+  {"id":4,"name":"전북은행  JB사잇돌대출","type":"신용 대출","repay":"원리금 균등상환","years":5.0,"principal":7100000,"rate":7.66,"start":"2023-01-01","end":"2028-01-01","memo":""}
+];
+let loans=JSON.parse(localStorage.getItem('dp_loans')||'null')||LOAN_SAMPLE;
+let loanNextId=Math.max(...loans.map(l=>l.id),0)+1;
+
+function calcLoanMonthly(principal,rate,years,repay){
+  const r=rate/100/12,n=Math.round(years*12);
+  if(repay==='만기 일시상환') return {monthly:Math.round(principal*r),total:Math.round(principal*r*n)};
+  if(r===0) return {monthly:Math.round(principal/n),total:0};
+  const m=Math.round(principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1));
+  return {monthly:m,total:Math.round(m*n-principal)};
+}
+
+function calcLoanProgress(l){
+  // 경과 개월 계산
+  const today=new Date();
+  const start=l.start?new Date(l.start):null;
+  const end=l.end?new Date(l.end):null;
+  if(!start) return {paid:0,remaining:l.principal,pct:0,elapsedMonths:0,totalMonths:Math.round(l.years*12)};
+  const totalMonths=Math.round(l.years*12);
+  const msPerMonth=1000*60*60*24*30.44;
+  const elapsedMonths=Math.min(Math.max(0,Math.round((today-start)/msPerMonth)),totalMonths);
+  const {monthly}=calcLoanMonthly(l.principal,l.rate,l.years,l.repay);
+
+  let paid=0,remaining=l.principal;
+  if(l.repay==='만기 일시상환'){
+    // 이자만 납부, 원금은 만기에
+    paid=monthly*elapsedMonths;
+    remaining=l.principal;
+  } else if(l.repay==='원리금 균등상환'){
+    // 매월 원금+이자 납부, 원금 점점 감소
+    const r=l.rate/100/12;
+    let bal=l.principal;
+    for(let i=0;i<elapsedMonths;i++){
+      const interest=Math.round(bal*r);
+      const principalPart=monthly-interest;
+      bal=Math.max(0,bal-principalPart);
+    }
+    remaining=Math.round(bal);
+    paid=l.principal-remaining;
+  } else {
+    // 원금 균등상환
+    const monthlyPrincipal=Math.round(l.principal/totalMonths);
+    paid=monthlyPrincipal*elapsedMonths;
+    remaining=Math.max(0,l.principal-paid);
+  }
+  const pct=totalMonths>0?Math.min(100,Math.round(elapsedMonths/totalMonths*100)):0;
+  return{paid,remaining,pct,elapsedMonths,totalMonths};
+}
+
+function saveLoan(){try{localStorage.setItem('dp_loans',JSON.stringify(loans))}catch(e){}}
+
+function renderLoan(){
+  let totalPrincipal=0,totalInterest=0,rateSum=0;
+  document.getElementById('loan-count').textContent=loans.length+'건';
+  loans.forEach(l=>{
+    totalPrincipal+=l.principal;
+    const{total}=calcLoanMonthly(l.principal,l.rate,l.years,l.repay);
+    totalInterest+=total;rateSum+=l.rate;
+  });
+  document.getElementById('loan-total').textContent=fmt(totalPrincipal);
+  document.getElementById('loan-interest').textContent=fmt(totalInterest);
+  document.getElementById('loan-rate').textContent=(loans.length?(rateSum/loans.length).toFixed(2):0)+'%';
+  const loanTypeColors={'주택대출':'#e3f2fd','신용 대출':'#fce4ec','전세대출':'#e8f5e9','사업자대출':'#fff3e0','기타':'#f3e5f5'};
+  const loanTypeTextColors={'주택대출':'#1565c0','신용 대출':'#c62828','전세대출':'#2e7d32','사업자대출':'#e65100','기타':'#6a1b9a'};
+  document.getElementById('loan-tbody').innerHTML=loans.map(l=>{
+    const{monthly,total}=calcLoanMonthly(l.principal,l.rate,l.years,l.repay);
+    const{paid,remaining,pct,elapsedMonths,totalMonths}=calcLoanProgress(l);
+    const isOneTime=l.repay==='만기 일시상환';
+    const bg=loanTypeColors[l.type]||'#f5f5f5';
+    const tc=loanTypeTextColors[l.type]||'#333';
+    const barColor=pct>=100?'var(--income)':'var(--saving)';
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-weight:500;font-size:13.5px">${l.name}</td>
+      <td style="padding:10px 14px"><span style="background:${bg};color:${tc};padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600">${l.type}</span></td>
+      <td style="padding:10px 14px;font-size:13px;color:var(--text2)">${l.repay}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px">${l.years}년</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${l.start||'-'}</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${l.end||'-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--expense)">${fmt(l.principal)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;color:var(--saving)">${l.rate}%</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px;color:var(--expense)">${fmt(total)}</td>
+      <td style="padding:10px 14px;min-width:200px">
+        <div style="margin-bottom:6px;display:flex;justify-content:space-between;font-size:11.5px">
+          <span style="color:var(--income);font-weight:600">갚은 금액 ${isOneTime?fmt(paid)+' (이자)':fmt(paid)}</span>
+          <span style="color:var(--expense);font-weight:600">남은 ${isOneTime?'원금 '+fmt(remaining):fmt(remaining)}</span>
+        </div>
+        <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:4px">
+          <div style="width:${pct}%;height:100%;background:${barColor};border-radius:3px;transition:width .5s"></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);text-align:right">${elapsedMonths}/${totalMonths}개월 (${pct}%)</div>
+      </td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2);min-width:200px">
+        매월 <span style="color:var(--expense);font-weight:600">${monthly.toLocaleString()}원</span>${isOneTime?`, 만기 <span style="color:var(--expense);font-weight:600">${l.principal.toLocaleString()}원</span>`:''}
+      </td>
+      <td style="padding:10px 14px;text-align:center;white-space:nowrap">
+      <button onclick="editLoan(${l.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 6px;border-radius:4px;margin-right:4px" title="수정">✎</button>
+      <button onclick="deleteLoan(${l.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 6px;border-radius:4px" title="삭제">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editingLoanId=null;
+function openLoanModal(id){
+  editingLoanId=id||null;
+  const l=id?loans.find(x=>x.id===id):null;
+  document.getElementById('loan-modal-title').textContent=id?'🏠 대출 수정':'🏠 대출 추가';
+  document.getElementById('l-name').value=l?l.name:'';
+  document.getElementById('l-type').value=l?l.type:'주택대출';
+  document.getElementById('l-repay').value=l?l.repay:'만기 일시상환';
+  document.getElementById('l-principal').value=l?l.principal:'';
+  document.getElementById('l-rate').value=l?l.rate:'';
+  document.getElementById('l-years').value=l?l.years:'';
+  document.getElementById('l-start').value=l?l.start||'':'';
+  document.getElementById('l-end').value=l?l.end||'':'';
+  document.getElementById('l-memo').value=l?l.memo||'':'';
+  document.getElementById('loan-modal').classList.add('open');
+}
+function editLoan(id){openLoanModal(id)}
+function closeLoanModal(){document.getElementById('loan-modal').classList.remove('open');editingLoanId=null}
+function addLoan(){
+  const name=document.getElementById('l-name').value.trim();
+  const principal=parseFloat(document.getElementById('l-principal').value);
+  const rate=parseFloat(document.getElementById('l-rate').value);
+  const years=parseFloat(document.getElementById('l-years').value);
+  if(!name||isNaN(principal)||isNaN(rate)||isNaN(years)){alert('상품명, 원금, 금리, 기간을 입력해주세요.');return}
+  const obj={name,type:document.getElementById('l-type').value,repay:document.getElementById('l-repay').value,years,principal,rate,start:document.getElementById('l-start').value,end:document.getElementById('l-end').value,memo:document.getElementById('l-memo').value};
+  if(editingLoanId){
+    const idx=loans.findIndex(x=>x.id===editingLoanId);
+    if(idx>=0)loans[idx]={...loans[idx],...obj};
+  } else {
+    loans.push({id:loanNextId++,...obj});
+  }
+  saveLoan();closeLoanModal();renderLoan();
+}
+function deleteLoan(id){if(!confirm('삭제할까요?'))return;loans=loans.filter(l=>l.id!==id);saveLoan();renderLoan()}
+
+// ── 보험 현황 ──
+const INS_SAMPLE=[{"id": 1, "name": "KB탑클래스 건강보험", "company": "KB손해보험", "status": "납입중", "renew": "혼합", "kind": "건강보험", "start": "2025-10-20", "end": "2096-10-20", "monthly": 109209, "years": 30, "coverage": "암진단비 (3억원) 사망 (1천만원)", "special": "", "contact": "유옥남 / 010-2279-7901"}, {"id": 2, "name": "KB손보 실손의료비", "company": "KB손해보험", "status": "납입중", "renew": "갱신", "kind": "실손보험", "start": "2025-10-20", "end": "2030-10-20", "monthly": 22910, "years": 5, "coverage": "4세대 실손 (5천만원)", "special": "", "contact": "유옥남 / 010-2279-7901"}, {"id": 3, "name": "THE건강한 치아보험", "company": "라이나생명", "status": "납입중", "renew": "갱신", "kind": "건강보험", "start": "2025-10-20", "end": "2035-10-20", "monthly": 40980, "years": 10, "coverage": "치아 (1천만원)", "special": "크라운 보장 (2천만원)", "contact": "유옥남 / 010-2279-7901"}];
+let insurances=JSON.parse(localStorage.getItem('dp_ins')||'null')||INS_SAMPLE;
+let insNextId=Math.max(...insurances.map(i=>i.id),0)+1;
+function saveIns(){try{localStorage.setItem('dp_ins',JSON.stringify(insurances))}catch(e){}}
+
+function renderInsurance(){
+  const total=insurances.reduce((s,i)=>s+i.monthly,0);
+  document.getElementById('ins-count').textContent=insurances.length+'건';
+  document.getElementById('ins-monthly').textContent=fmt(total);
+  document.getElementById('ins-yearly').textContent=fmt(total*12);
+  const kindColors={'건강보험':'#e3f2fd','실손보험':'#e8f5e9','생명보험':'#fce4ec','자동차보험':'#fff3e0','화재보험':'#f3e5f5','기타':'#f5f5f5'};
+  const kindTextColors={'건강보험':'#1565c0','실손보험':'#2e7d32','생명보험':'#c62828','자동차보험':'#e65100','화재보험':'#6a1b9a','기타':'#555'};
+  document.getElementById('ins-tbody').innerHTML=insurances.map(i=>{
+    const kBg=kindColors[i.kind]||'#f5f5f5';const kTc=kindTextColors[i.kind]||'#333';
+    const isActive=i.status==='납입중';
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-weight:500;font-size:13.5px">${i.name}</td>
+      <td style="padding:10px 14px"><span style="background:#f0f0f0;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;color:#555">${i.company}</span></td>
+      <td style="padding:10px 14px"><span style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;color:${isActive?'var(--income)':'var(--text3)'}"><span style="width:6px;height:6px;border-radius:50%;background:${isActive?'var(--income)':'var(--text3)'};flex-shrink:0"></span>${i.status}</span></td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${i.renew}</td>
+      <td style="padding:10px 14px"><span style="background:${kBg};color:${kTc};padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600">${i.kind}</span></td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${i.start||'-'}</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${i.end||'-'}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--expense)">${fmt(i.monthly)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px">${i.years}년</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2);max-width:160px">${i.coverage||'-'}</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2);max-width:140px">${i.special||'-'}</td>
+      <td style="padding:10px 14px;text-align:center;white-space:nowrap">
+      <button onclick="editIns(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 6px;border-radius:4px;margin-right:4px" title="수정">✎</button>
+      <button onclick="deleteIns(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 6px;border-radius:4px" title="삭제">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editingInsId=null;
+function openInsModal(id){
+  editingInsId=id||null;
+  const i=id?insurances.find(x=>x.id===id):null;
+  document.getElementById('ins-modal-title').textContent=id?'🛡️ 보험 수정':'🛡️ 보험 추가';
+  document.getElementById('i-name').value=i?i.name:'';
+  document.getElementById('i-company').value=i?i.company:'';
+  document.getElementById('i-status').value=i?i.status:'납입중';
+  document.getElementById('i-renew').value=i?i.renew:'갱신';
+  document.getElementById('i-kind').value=i?i.kind:'건강보험';
+  document.getElementById('i-start').value=i?i.start||'':'';
+  document.getElementById('i-end').value=i?i.end||'':'';
+  document.getElementById('i-monthly').value=i?i.monthly:'';
+  document.getElementById('i-years').value=i?i.years:'';
+  document.getElementById('i-coverage').value=i?i.coverage:'';
+  document.getElementById('i-special').value=i?i.special:'';
+  document.getElementById('ins-modal').classList.add('open');
+}
+function editIns(id){openInsModal(id)}
+function closeInsModal(){document.getElementById('ins-modal').classList.remove('open');editingInsId=null}
+function addInsurance(){
+  const name=document.getElementById('i-name').value.trim();
+  const monthly=parseFloat(document.getElementById('i-monthly').value);
+  if(!name||isNaN(monthly)){alert('상품명과 월 납입액을 입력해주세요.');return}
+  const obj={name,company:document.getElementById('i-company').value,status:document.getElementById('i-status').value,renew:document.getElementById('i-renew').value,kind:document.getElementById('i-kind').value,start:document.getElementById('i-start').value,end:document.getElementById('i-end').value,monthly,years:parseFloat(document.getElementById('i-years').value)||0,coverage:document.getElementById('i-coverage').value,special:document.getElementById('i-special').value,contact:''};
+  if(editingInsId){
+    const idx=insurances.findIndex(x=>x.id===editingInsId);
+    if(idx>=0)insurances[idx]={...insurances[idx],...obj};
+  } else {
+    insurances.push({id:insNextId++,...obj});
+  }
+  saveIns();closeInsModal();renderInsurance();
+}
+function deleteIns(id){if(!confirm('삭제할까요?'))return;insurances=insurances.filter(i=>i.id!==id);saveIns();renderInsurance()}
+
+// ── 예적금 한판 ──
+const SAV_SAMPLE=[{"id": 1, "name": "하나은행 적금", "bank": "하나은행", "monthly": 100000, "rate": 3.8, "start": "2025-04-05", "end": "2027-04-05", "goal": "여행자금", "memo": "적금"}, {"id": 2, "name": "카카오뱅크 적금", "bank": "카카오뱅크", "monthly": 200000, "rate": 3.8, "start": "2023-12-03", "end": "2024-12-03", "goal": "결혼자금", "memo": "적금"}, {"id": 3, "name": "기업은행 청년적금", "bank": "기업은행", "monthly": 500000, "rate": 5.0, "start": "2023-07-07", "end": "2025-07-07", "goal": "목돈마련", "memo": "적금"}, {"id": 4, "name": "하나은행 12개월예금", "bank": "하나은행", "monthly": 0, "rate": 3.5, "start": "2023-10-04", "end": "2024-10-04", "goal": "결혼자금", "memo": "예금"}, {"id": 5, "name": "카카오뱅크 12개월예금", "bank": "카카오뱅크", "monthly": 500000, "rate": 3.6, "start": "2025-01-29", "end": "2026-01-28", "goal": "전세자금", "memo": "예금"}];
+let savings=JSON.parse(localStorage.getItem('dp_sav')||'null')||SAV_SAMPLE;
+let savNextId=Math.max(...savings.map(s=>s.id),0)+1;
+function saveSav(){try{localStorage.setItem('dp_sav',JSON.stringify(savings))}catch(e){}}
+
+function calcSavings(s){
+  const start=new Date(s.start),end=new Date(s.end);
+  const months=Math.max(0,Math.round((end-start)/(1000*60*60*24*30.44)));
+  const r=s.rate/100/12;
+  const maturity=r>0?Math.round(s.monthly*(Math.pow(1+r,months)-1)/r*(1+r)):s.monthly*months;
+  const interest=Math.max(0,maturity-s.monthly*months);
+  const today=new Date();
+  const elapsed=Math.max(0,Math.round((today-start)/(1000*60*60*24*30.44)));
+  const pct=months>0?Math.min(100,Math.round(elapsed/months*100)):0;
+  return{months,maturity,interest,pct};
+}
+
+function renderSavings(){
+  let totalMonthly=0,totalInterest=0,totalMaturity=0;
+  savings.forEach(s=>{const{maturity,interest}=calcSavings(s);totalMonthly+=s.monthly;totalInterest+=interest;totalMaturity+=maturity});
+  document.getElementById('sav-count').textContent=savings.length+'건';
+  document.getElementById('sav-monthly').textContent=fmt(totalMonthly);
+  document.getElementById('sav-interest').textContent=fmt(totalInterest);
+  document.getElementById('sav-maturity').textContent=fmt(totalMaturity);
+  const goalColors=['#fff3e0','#e8f5e9','#e3f2fd','#f3e5f5','#fce4ec','#e0f2f1'];
+  const goalTextColors=['#e65100','#2e7d32','#1565c0','#6a1b9a','#c62828','#00695c'];
+  const goalMap={};
+  document.getElementById('sav-tbody').innerHTML=savings.map((s,idx)=>{
+    const{months,maturity,interest,pct}=calcSavings(s);
+    const gi=Object.keys(goalMap).indexOf(s.goal||'기타');const gIdx=gi>=0?gi:Object.keys(goalMap).length;
+    goalMap[s.goal||'기타']=true;
+    const bg=goalColors[gIdx%goalColors.length];const tc=goalTextColors[gIdx%goalTextColors.length];
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:10px 14px;font-weight:500;font-size:13.5px">${s.name}</td>
+      <td style="padding:10px 14px"><span style="background:#f0f0f0;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;color:#555">${s.bank||'-'}</span></td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--saving)">${fmt(s.monthly)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:600;color:var(--income)">${s.rate}%</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px">${months}개월</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${s.start||'-'}</td>
+      <td style="padding:10px 14px;font-size:12.5px;color:var(--text2)">${s.end||'-'}</td>
+      <td style="padding:10px 14px;min-width:120px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--saving);border-radius:3px"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:var(--saving);min-width:32px;text-align:right">${pct}%</span>
+        </div>
+      </td>
+      <td style="padding:10px 14px;text-align:right;font-size:13px;color:var(--income)">${fmt(interest)}</td>
+      <td style="padding:10px 14px;text-align:right;font-size:13.5px;font-weight:600;color:var(--income)">${fmt(maturity)}</td>
+      <td style="padding:10px 14px">${s.goal?`<span style="background:${bg};color:${tc};padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600">${s.goal}</span>`:'-'}</td>
+      <td style="padding:10px 14px;text-align:center;white-space:nowrap">
+      <button onclick="editSav(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 6px;border-radius:4px;margin-right:4px" title="수정">✎</button>
+      <button onclick="deleteSav(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 6px;border-radius:4px" title="삭제">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editingSavId=null;
+function openSavModal(id){
+  editingSavId=id||null;
+  const s=id?savings.find(x=>x.id===id):null;
+  document.getElementById('sav-modal-title').textContent=id?'💰 예적금 수정':'💰 예적금 추가';
+  document.getElementById('s-name').value=s?s.name:'';
+  document.getElementById('s-bank').value=s?s.bank:'';
+  document.getElementById('s-monthly').value=s?s.monthly:'';
+  document.getElementById('s-rate').value=s?s.rate:'';
+  document.getElementById('s-start').value=s?s.start||'':'';
+  document.getElementById('s-end').value=s?s.end||'':'';
+  document.getElementById('s-goal').value=s?s.goal:'';
+  document.getElementById('s-memo').value=s?s.memo:'';
+  document.getElementById('sav-modal').classList.add('open');
+}
+function editSav(id){openSavModal(id)}
+function closeSavModal(){document.getElementById('sav-modal').classList.remove('open');editingSavId=null}
+function addSavings(){
+  const name=document.getElementById('s-name').value.trim();
+  const monthly=parseFloat(document.getElementById('s-monthly').value);
+  if(!name||isNaN(monthly)){alert('상품명과 월 납입액을 입력해주세요.');return}
+  const obj={name,bank:document.getElementById('s-bank').value,monthly,rate:parseFloat(document.getElementById('s-rate').value)||0,start:document.getElementById('s-start').value,end:document.getElementById('s-end').value,goal:document.getElementById('s-goal').value,memo:document.getElementById('s-memo').value};
+  if(editingSavId){
+    const idx=savings.findIndex(x=>x.id===editingSavId);
+    if(idx>=0)savings[idx]={...savings[idx],...obj};
+  } else {
+    savings.push({id:savNextId++,...obj});
+  }
+  saveSav();closeSavModal();renderSavings();
+}
+function deleteSav(id){if(!confirm('삭제할까요?'))return;savings=savings.filter(s=>s.id!==id);saveSav();renderSavings()}
+</script>
+</body>
+</html>
