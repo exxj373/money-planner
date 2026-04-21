@@ -140,6 +140,22 @@ tbody td{padding:11px 14px;font-size:13.5px}
 .lock-error{font-size:13px;color:var(--expense);margin-top:10px;min-height:18px}
 .lock-hint{font-size:12px;color:var(--text3);margin-top:16px}
 </style>
+
+<script>
+function checkPassword(){
+  const input = document.getElementById('lock-input').value;
+  const saved = localStorage.getItem('mp_password') || '1234';
+  if(input === saved){
+    document.getElementById('lock-screen').style.display = 'none';
+    localStorage.setItem('mp_unlocked', Date.now());
+  } else {
+    document.getElementById('lock-error').textContent = '❌ 비밀번호가 틀렸어요';
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+    setTimeout(()=>document.getElementById('lock-error').textContent='', 2000);
+  }
+}
+</script>
 </head>
 <body>
 
