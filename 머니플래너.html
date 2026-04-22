@@ -1122,6 +1122,19 @@ async function syncToSheets() {
     Object.entries(goals).forEach(([k,v])=>goalRows.push([k,v]));
     await writeSheet('목표', goalRows);
 
+    // 주식
+    const scRows = [['id','date','type','amount','memo']];
+    stockCash.forEach(s=>scRows.push([s.id,s.date,s.type,s.amount,s.memo||'']));
+    await writeSheet('주식입출금', scRows);
+
+    const strRows = [['id','date','name','pnl']];
+    stockTrade.forEach(s=>strRows.push([s.id,s.date,s.name,s.pnl]));
+    await writeSheet('주식매도', strRows);
+
+    const shRows = [['id','name','qty','cost','eval']];
+    stockHold.forEach(s=>shRows.push([s.id,s.name,s.qty,s.cost,s.eval]));
+    await writeSheet('주식보유', shRows);
+
     setSyncStatus('done');
     setTimeout(()=>setSyncStatus('idle'), 2000);
   } catch(e) {
@@ -1180,6 +1193,31 @@ async function loadFromSheets() {
       goals = {};
       goalData.slice(1).forEach(r=>{if(r[0])goals[r[0]]=parseInt(r[1])||0});
       try{localStorage.setItem('dp_goals',JSON.stringify(goals))}catch(e){}
+    }
+
+    // 주식 불러오기
+    const scData = await readSheet('주식입출금');
+    if(scData.length > 1) {
+      stockCash = scData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),date:r[1],type:r[2],amount:parseInt(r[3]),memo:r[4]||''
+      }));
+      try{localStorage.setItem('dp_stcash',JSON.stringify(stockCash))}catch(e){}
+    }
+
+    const strData = await readSheet('주식매도');
+    if(strData.length > 1) {
+      stockTrade = strData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),date:r[1],name:r[2],pnl:parseFloat(r[3])
+      }));
+      try{localStorage.setItem('dp_sttrade',JSON.stringify(stockTrade))}catch(e){}
+    }
+
+    const shData = await readSheet('주식보유');
+    if(shData.length > 1) {
+      stockHold = shData.slice(1).filter(r=>r[0]).map(r=>({
+        id:parseInt(r[0]),name:r[1],qty:parseInt(r[2]),cost:parseInt(r[3]),eval:parseInt(r[4])
+      }));
+      try{localStorage.setItem('dp_sthold',JSON.stringify(stockHold))}catch(e){}
     }
 
     setSyncStatus('done');
