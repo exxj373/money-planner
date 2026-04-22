@@ -155,6 +155,18 @@ function checkPassword(){
     setTimeout(()=>document.getElementById('lock-error').textContent='', 2000);
   }
 }
+function changePassword(){
+  const current = prompt('현재 비밀번호를 입력하세요:');
+  if(current === null) return;
+  const saved = localStorage.getItem('mp_password') || '1234';
+  if(current !== saved){ alert('현재 비밀번호가 틀렸어요!'); return; }
+  const newPw = prompt('새 비밀번호를 입력하세요:');
+  if(!newPw) return;
+  const confirm = prompt('새 비밀번호를 다시 입력하세요:');
+  if(newPw !== confirm){ alert('비밀번호가 일치하지 않아요!'); return; }
+  localStorage.setItem('mp_password', newPw);
+  alert('✅ 비밀번호가 변경됐어요!');
+}
 </script>
 </head>
 <body>
