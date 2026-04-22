@@ -187,7 +187,7 @@ function changePassword(){
 <div class="app">
 <aside class="sidebar">
   <div class="logo">💛 머니플래너</div>
-  <div class="logo-sub">쓰면 쓸수록 부자되는 습관 💰</div>
+  <div class="logo-sub">은진이의 부자되기 프로젝트 💰</div>
   <div style="display:flex;gap:6px;margin-bottom:10px">
     <button id="sync-btn" onclick="syncToSheets()" style="flex:1;background:var(--accent);color:var(--text);border:none;border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">☁️ 저장</button>
     <button id="load-btn" onclick="loadFromSheets()" style="flex:1;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 불러오기</button>
@@ -210,10 +210,10 @@ function changePassword(){
   </div>
   <div class="nav-section">
     <div class="nav-label">자산관리</div>
-    <div class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📈</span>주식</div>
     <div class="nav-item" onclick="showPage('loan',this)"><span class="nav-icon">🏠</span>대출</div>
-    <div class="nav-item" onclick="showPage('insurance',this)"><span class="nav-icon">🛡️</span>보험</div>
     <div class="nav-item" onclick="showPage('savings',this)"><span class="nav-icon">💰</span>예적금</div>
+    <div class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📈</span>주식</div>
+    <div class="nav-item" onclick="showPage('insurance',this)"><span class="nav-icon">🛡️</span>보험</div>
   </div>
 </aside>
 
