@@ -176,6 +176,10 @@ function checkPassword(){
 <aside class="sidebar">
   <div class="logo">💛 머니플래너</div>
   <div class="logo-sub">쓰면 쓸수록 부자되는 습관 💰</div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    <button id="sync-btn" onclick="syncToSheets()" style="flex:1;background:var(--accent);color:var(--text);border:none;border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">☁️ 저장</button>
+    <button id="load-btn" onclick="loadFromSheets()" style="flex:1;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 불러오기</button>
+  </div>
   <button onclick="changePassword()" style="width:100%;padding:7px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">🔒 비밀번호 변경</button>
 
   <div class="nav-section">
