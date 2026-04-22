@@ -210,6 +210,7 @@ function changePassword(){
   </div>
   <div class="nav-section">
     <div class="nav-label">자산관리</div>
+    <div class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📈</span>주식</div>
     <div class="nav-item" onclick="showPage('loan',this)"><span class="nav-icon">🏠</span>대출</div>
     <div class="nav-item" onclick="showPage('insurance',this)"><span class="nav-icon">🛡️</span>보험</div>
     <div class="nav-item" onclick="showPage('savings',this)"><span class="nav-icon">💰</span>예적금</div>
@@ -523,7 +524,134 @@ function changePassword(){
   </div>
 </div>
 
+
+<!-- 주식 -->
+<div id="page-stock" class="page">
+  <div class="page-header">
+    <div><div class="page-title">📈 주식 현황</div><div class="page-sub">주식 입출금, 매도손익, 보유 현황을 관리해요.</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" onclick="openStockCashModal()">+ 입출금 추가</button>
+      <button class="btn-primary" onclick="openStockTradeModal()">+ 매도 추가</button>
+      <button class="btn-primary" onclick="openStockHoldModal()">+ 보유주식 추가</button>
+    </div>
+  </div>
+  <div class="section">
+
+    <!-- 전체 요약 -->
+    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      <div class="summary-card"><div class="summary-label">순투입금</div><div class="summary-value saving" id="st-netinput">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">실현+보유 합산손익</div><div class="summary-value" id="st-total-pnl">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">현재 주식 평가금</div><div class="summary-value income" id="st-eval">₩0</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px">
+
+      <!-- 입출금 내역 -->
+      <div class="board-card">
+        <div class="board-card-title">💰 입출금 내역</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px">
+          <span>총 입금: <b style="color:var(--income)" id="st-total-in">₩0</b></span>
+          <span>총 출금: <b style="color:var(--expense)" id="st-total-out">₩0</b></span>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>날짜</th><th>구분</th><th style="text-align:right">금액</th><th>비고</th><th></th></tr></thead>
+          <tbody id="st-cash-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- 매도 손익 -->
+      <div class="board-card">
+        <div class="board-card-title">📊 매도 완료 손익</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px">
+          <span>실현수익: <b style="color:var(--income)" id="st-real-profit">₩0</b></span>
+          <span>실현손실: <b style="color:var(--expense)" id="st-real-loss">₩0</b></span>
+          <span>합계: <b id="st-real-total">₩0</b></span>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr><th>날짜</th><th>종목</th><th style="text-align:right">실현손익</th><th></th></tr></thead>
+          <tbody id="st-trade-tbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- 현재 보유 주식 -->
+      <div class="board-card full" style="grid-column:1/-1">
+        <div class="board-card-title">🏦 현재 보유 주식</div>
+        <div style="display:flex;gap:24px;margin-bottom:12px;font-size:13px">
+          <span>보유 원금: <b style="color:var(--text)" id="st-hold-cost">₩0</b></span>
+          <span>현재 평가금: <b style="color:var(--saving)" id="st-hold-eval">₩0</b></span>
+          <span>평가손익: <b id="st-hold-pnl">₩0</b></span>
+        </div>
+        <div class="table-wrap">
+          <table><thead><tr>
+            <th>종목</th><th style="text-align:right">수량</th>
+            <th style="text-align:right">원금</th>
+            <th style="text-align:right">현재평가금</th>
+            <th style="text-align:right">평가손익</th>
+            <th>수익률</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="st-hold-tbody"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </main>
+</div>
+
+
+<!-- 주식 입출금 모달 -->
+<div class="modal-overlay" id="stock-cash-modal" onclick="if(event.target.id==='stock-cash-modal')closeStockCashModal()">
+  <div class="modal">
+    <div class="modal-title" id="stock-cash-modal-title">💰 입출금 추가</div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">날짜 *</label><input class="form-input" id="sc-date" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">구분 *</label>
+        <select class="form-select" id="sc-type"><option>입금</option><option>출금</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">금액 *</label><input class="form-input" id="sc-amount" type="number" placeholder="0" min="0"></div>
+    <div class="form-row"><label class="form-label">비고</label><input class="form-input" id="sc-memo" type="text" placeholder="이체입금, 이체출금..."></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeStockCashModal()">취소</button>
+      <button class="btn-primary" onclick="addStockCash()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 주식 매도 모달 -->
+<div class="modal-overlay" id="stock-trade-modal" onclick="if(event.target.id==='stock-trade-modal')closeStockTradeModal()">
+  <div class="modal">
+    <div class="modal-title" id="stock-trade-modal-title">📊 매도 추가</div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">날짜 *</label><input class="form-input" id="str-date" type="date"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">종목 *</label><input class="form-input" id="str-name" type="text" placeholder="삼성전자"></div>
+    </div>
+    <div class="form-row"><label class="form-label">실현손익 *</label><input class="form-input" id="str-pnl" type="number" placeholder="손실이면 음수로 입력"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeStockTradeModal()">취소</button>
+      <button class="btn-primary" onclick="addStockTrade()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보유주식 모달 -->
+<div class="modal-overlay" id="stock-hold-modal" onclick="if(event.target.id==='stock-hold-modal')closeStockHoldModal()">
+  <div class="modal">
+    <div class="modal-title" id="stock-hold-modal-title">🏦 보유주식 추가/수정</div>
+    <div class="form-row"><label class="form-label">종목 *</label><input class="form-input" id="sh-name" type="text" placeholder="삼성전자"></div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">수량 *</label><input class="form-input" id="sh-qty" type="number" placeholder="10" min="0"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">원금 *</label><input class="form-input" id="sh-cost" type="number" placeholder="1000000" min="0"></div>
+    </div>
+    <div class="form-row"><label class="form-label">현재 평가금 *</label><input class="form-input" id="sh-eval" type="number" placeholder="1050000" min="0"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeStockHoldModal()">취소</button>
+      <button class="btn-primary" onclick="addStockHold()">저장</button>
+    </div>
+  </div>
 </div>
 
 <!-- 대출 모달 -->
@@ -658,7 +786,7 @@ function showPage(name,el){
   const m={ledger:renderLedger,board:renderBoard,calendar:renderCalendar,
     period:()=>{document.getElementById('period-input').value=thisMonth().replace('-','.');renderPeriod()},
     category:renderCategory,payment:renderPayment,fixed:renderFixed,challenge:renderChallenge,
-    loan:renderLoan,insurance:renderInsurance,savings:renderSavings};
+    loan:renderLoan,insurance:renderInsurance,savings:renderSavings,stock:renderStock};
   if(m[name])m[name]();
 }
 
@@ -1491,6 +1619,210 @@ function addSavings(){
   saveSav();closeSavModal();renderSavings();
 }
 function deleteSav(id){if(!confirm('삭제할까요?'))return;savings=savings.filter(s=>s.id!==id);saveSav();renderSavings()}
+
+// ── 주식 ──
+const STOCK_CASH_SAMPLE = [
+  {id:1,date:'2026-04-07',type:'입금',amount:195200,memo:'이체입금'},
+  {id:2,date:'2026-04-09',type:'입금',amount:52650,memo:'이체입금'},
+  {id:3,date:'2026-04-09',type:'입금',amount:105625,memo:'이체입금'},
+  {id:4,date:'2026-04-10',type:'입금',amount:2000000,memo:'이체입금'},
+  {id:5,date:'2026-04-10',type:'입금',amount:1012575,memo:'이체입금'},
+  {id:6,date:'2026-04-15',type:'출금',amount:251847,memo:'이체출금'},
+  {id:7,date:'2026-04-16',type:'출금',amount:518998,memo:'이체출금'},
+  {id:8,date:'2026-04-22',type:'입금',amount:2000000,memo:'이체입금'},
+  {id:9,date:'2026-04-22',type:'입금',amount:542173,memo:'이체입금'},
+  {id:10,date:'2026-04-22',type:'출금',amount:455987,memo:'이체출금'},
+];
+const STOCK_TRADE_SAMPLE = [
+  {id:1,date:'2026-04-10',name:'빛과전자',pnl:26237},
+  {id:2,date:'2026-04-13',name:'대한광통신',pnl:283605},
+  {id:3,date:'2026-04-13',name:'남해화학',pnl:6000},
+  {id:4,date:'2026-04-13',name:'삼성전자',pnl:5898},
+  {id:5,date:'2026-04-13',name:'흥아해운',pnl:-357},
+  {id:6,date:'2026-04-14',name:'대한광통신',pnl:26662},
+  {id:7,date:'2026-04-14',name:'우리로',pnl:8295},
+  {id:8,date:'2026-04-15',name:'대한광통신',pnl:59878},
+  {id:9,date:'2026-04-21',name:'대우건설',pnl:59327},
+  {id:10,date:'2026-04-22',name:'대한광통신',pnl:-141013},
+];
+const STOCK_HOLD_SAMPLE = [
+  {id:1,name:'대한광통신',qty:20,cost:398000,eval:305987},
+  {id:2,name:'삼성SDI',qty:7,cost:4635000,eval:4610760},
+];
+
+let stockCash = JSON.parse(localStorage.getItem('dp_stcash')||'null')||STOCK_CASH_SAMPLE;
+let stockTrade = JSON.parse(localStorage.getItem('dp_sttrade')||'null')||STOCK_TRADE_SAMPLE;
+let stockHold = JSON.parse(localStorage.getItem('dp_sthold')||'null')||STOCK_HOLD_SAMPLE;
+let scNextId = Math.max(...stockCash.map(s=>s.id),0)+1;
+let strNextId = Math.max(...stockTrade.map(s=>s.id),0)+1;
+let shNextId = Math.max(...stockHold.map(s=>s.id),0)+1;
+let editingScId=null, editingStrId=null, editingShId=null;
+
+function saveStock(){
+  try{localStorage.setItem('dp_stcash',JSON.stringify(stockCash))}catch(e){}
+  try{localStorage.setItem('dp_sttrade',JSON.stringify(stockTrade))}catch(e){}
+  try{localStorage.setItem('dp_sthold',JSON.stringify(stockHold))}catch(e){}
+  triggerAutoSave();
+}
+
+function renderStock(){
+  // 입출금
+  const totalIn = stockCash.filter(s=>s.type==='입금').reduce((sum,s)=>sum+s.amount,0);
+  const totalOut = stockCash.filter(s=>s.type==='출금').reduce((sum,s)=>sum+s.amount,0);
+  const netInput = totalIn - totalOut;
+  document.getElementById('st-total-in').textContent = fmt(totalIn);
+  document.getElementById('st-total-out').textContent = fmt(totalOut);
+  document.getElementById('st-netinput').textContent = fmt(netInput);
+
+  document.getElementById('st-cash-tbody').innerHTML = [...stockCash].sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-size:13px">${fmtDate(s.date)}</td>
+      <td style="padding:8px 12px"><span class="tag ${s.type==='입금'?'badge-income':'badge-expense'}">${s.type}</span></td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:${s.type==='입금'?'var(--income)':'var(--expense)'}">${s.type==='입금'?'+':'-'}${fmt(s.amount)}</td>
+      <td style="padding:8px 12px;font-size:12.5px;color:var(--text3)">${s.memo||''}</td>
+      <td style="padding:8px 10px;text-align:center;white-space:nowrap">
+        <button onclick="editStockCash(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 4px">✎</button>
+        <button onclick="deleteStockCash(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px">✕</button>
+      </td>
+    </tr>`).join('');
+
+  // 매도손익
+  const realProfit = stockTrade.filter(s=>s.pnl>0).reduce((sum,s)=>sum+s.pnl,0);
+  const realLoss = stockTrade.filter(s=>s.pnl<0).reduce((sum,s)=>sum+s.pnl,0);
+  const realTotal = realProfit + realLoss;
+  document.getElementById('st-real-profit').textContent = fmt(realProfit);
+  document.getElementById('st-real-loss').textContent = fmt(Math.abs(realLoss));
+  const rtEl = document.getElementById('st-real-total');
+  rtEl.textContent = (realTotal>=0?'+':'-')+fmt(Math.abs(realTotal));
+  rtEl.style.color = realTotal>=0?'var(--income)':'var(--expense)';
+
+  document.getElementById('st-trade-tbody').innerHTML = [...stockTrade].sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-size:13px">${fmtDate(s.date)}</td>
+      <td style="padding:8px 12px;font-weight:500">${s.name}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:${s.pnl>=0?'var(--income)':'var(--expense)'}">${s.pnl>=0?'+':'-'}${fmt(Math.abs(s.pnl))}</td>
+      <td style="padding:8px 10px;text-align:center;white-space:nowrap">
+        <button onclick="editStockTrade(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 4px">✎</button>
+        <button onclick="deleteStockTrade(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px">✕</button>
+      </td>
+    </tr>`).join('');
+
+  // 보유주식
+  const holdCost = stockHold.reduce((sum,s)=>sum+s.cost,0);
+  const holdEval = stockHold.reduce((sum,s)=>sum+s.eval,0);
+  const holdPnl = holdEval - holdCost;
+  document.getElementById('st-hold-cost').textContent = fmt(holdCost);
+  document.getElementById('st-hold-eval').textContent = fmt(holdEval);
+  const hpEl = document.getElementById('st-hold-pnl');
+  hpEl.textContent = (holdPnl>=0?'+':'-')+fmt(Math.abs(holdPnl));
+  hpEl.style.color = holdPnl>=0?'var(--income)':'var(--expense)';
+
+  document.getElementById('st-hold-tbody').innerHTML = stockHold.map(s=>{
+    const pnl = s.eval - s.cost;
+    const pct = s.cost>0?((pnl/s.cost)*100).toFixed(2):0;
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-weight:500">${s.name}</td>
+      <td style="padding:8px 12px;text-align:right;font-size:13px">${s.qty}주</td>
+      <td style="padding:8px 12px;text-align:right;font-size:13px">${fmt(s.cost)}</td>
+      <td style="padding:8px 12px;text-align:right;font-size:13px;color:var(--saving)">${fmt(s.eval)}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:${pnl>=0?'var(--income)':'var(--expense)'}">${pnl>=0?'+':'-'}${fmt(Math.abs(pnl))}</td>
+      <td style="padding:8px 12px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:60px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div style="width:${Math.min(Math.abs(pct),100)}%;height:100%;background:${pnl>=0?'var(--income)':'var(--expense)'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${pnl>=0?'var(--income)':'var(--expense)'}">${pnl>=0?'+':''}${pct}%</span>
+        </div>
+      </td>
+      <td style="padding:8px 10px;text-align:center;white-space:nowrap">
+        <button onclick="editStockHold(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--saving);font-size:13px;padding:2px 4px">✎</button>
+        <button onclick="deleteStockHold(${s.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // 전체 요약
+  const totalPnl = realTotal + holdPnl;
+  const tpEl = document.getElementById('st-total-pnl');
+  tpEl.textContent = (totalPnl>=0?'+':'-')+fmt(Math.abs(totalPnl));
+  tpEl.style.color = totalPnl>=0?'var(--income)':'var(--expense)';
+  document.getElementById('st-eval').textContent = fmt(holdEval);
+}
+
+// 입출금 CRUD
+function openStockCashModal(id){
+  editingScId=id||null;
+  const s=id?stockCash.find(x=>x.id===id):null;
+  document.getElementById('stock-cash-modal-title').textContent=id?'💰 입출금 수정':'💰 입출금 추가';
+  document.getElementById('sc-date').value=s?s.date:todayStr();
+  document.getElementById('sc-type').value=s?s.type:'입금';
+  document.getElementById('sc-amount').value=s?s.amount:'';
+  document.getElementById('sc-memo').value=s?s.memo:'';
+  document.getElementById('stock-cash-modal').classList.add('open');
+}
+function closeStockCashModal(){document.getElementById('stock-cash-modal').classList.remove('open');editingScId=null}
+function addStockCash(){
+  const amount=parseFloat(document.getElementById('sc-amount').value);
+  const date=document.getElementById('sc-date').value;
+  if(!date||isNaN(amount)||amount<=0){alert('날짜와 금액을 입력해주세요.');return}
+  const obj={date,type:document.getElementById('sc-type').value,amount,memo:document.getElementById('sc-memo').value};
+  if(editingScId){const idx=stockCash.findIndex(x=>x.id===editingScId);if(idx>=0)stockCash[idx]={...stockCash[idx],...obj}}
+  else stockCash.push({id:scNextId++,...obj});
+  saveStock();closeStockCashModal();renderStock();
+}
+function editStockCash(id){openStockCashModal(id)}
+function deleteStockCash(id){if(!confirm('삭제할까요?'))return;stockCash=stockCash.filter(s=>s.id!==id);saveStock();renderStock()}
+
+// 매도 CRUD
+function openStockTradeModal(id){
+  editingStrId=id||null;
+  const s=id?stockTrade.find(x=>x.id===id):null;
+  document.getElementById('stock-trade-modal-title').textContent=id?'📊 매도 수정':'📊 매도 추가';
+  document.getElementById('str-date').value=s?s.date:todayStr();
+  document.getElementById('str-name').value=s?s.name:'';
+  document.getElementById('str-pnl').value=s?s.pnl:'';
+  document.getElementById('stock-trade-modal').classList.add('open');
+}
+function closeStockTradeModal(){document.getElementById('stock-trade-modal').classList.remove('open');editingStrId=null}
+function addStockTrade(){
+  const name=document.getElementById('str-name').value.trim();
+  const pnl=parseFloat(document.getElementById('str-pnl').value);
+  const date=document.getElementById('str-date').value;
+  if(!name||!date||isNaN(pnl)){alert('날짜, 종목, 손익을 입력해주세요.');return}
+  const obj={date,name,pnl};
+  if(editingStrId){const idx=stockTrade.findIndex(x=>x.id===editingStrId);if(idx>=0)stockTrade[idx]={...stockTrade[idx],...obj}}
+  else stockTrade.push({id:strNextId++,...obj});
+  saveStock();closeStockTradeModal();renderStock();
+}
+function editStockTrade(id){openStockTradeModal(id)}
+function deleteStockTrade(id){if(!confirm('삭제할까요?'))return;stockTrade=stockTrade.filter(s=>s.id!==id);saveStock();renderStock()}
+
+// 보유주식 CRUD
+function openStockHoldModal(id){
+  editingShId=id||null;
+  const s=id?stockHold.find(x=>x.id===id):null;
+  document.getElementById('stock-hold-modal-title').textContent=id?'🏦 보유주식 수정':'🏦 보유주식 추가';
+  document.getElementById('sh-name').value=s?s.name:'';
+  document.getElementById('sh-qty').value=s?s.qty:'';
+  document.getElementById('sh-cost').value=s?s.cost:'';
+  document.getElementById('sh-eval').value=s?s.eval:'';
+  document.getElementById('stock-hold-modal').classList.add('open');
+}
+function closeStockHoldModal(){document.getElementById('stock-hold-modal').classList.remove('open');editingShId=null}
+function addStockHold(){
+  const name=document.getElementById('sh-name').value.trim();
+  const qty=parseFloat(document.getElementById('sh-qty').value);
+  const cost=parseFloat(document.getElementById('sh-cost').value);
+  const ev=parseFloat(document.getElementById('sh-eval').value);
+  if(!name||isNaN(qty)||isNaN(cost)||isNaN(ev)){alert('모든 항목을 입력해주세요.');return}
+  const obj={name,qty,cost,eval:ev};
+  if(editingShId){const idx=stockHold.findIndex(x=>x.id===editingShId);if(idx>=0)stockHold[idx]={...stockHold[idx],...obj}}
+  else stockHold.push({id:shNextId++,...obj});
+  saveStock();closeStockHoldModal();renderStock();
+}
+function editStockHold(id){openStockHoldModal(id)}
+function deleteStockHold(id){if(!confirm('삭제할까요?'))return;stockHold=stockHold.filter(s=>s.id!==id);saveStock();renderStock()}
+
 </script>
 </body>
 </html>
