@@ -164,7 +164,7 @@ tbody td{padding:11px 14px;font-size:13.5px}
       <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="sum-invest" style="color:#2d7a2d">₩0</div></div>
       <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="sum-loan-pay" style="color:#c06000">₩0</div></div>
       <div class="summary-card"><div class="summary-label">카드대금</div><div class="summary-value" id="sum-card" style="color:#c62828">₩0</div></div>
-      <div class="summary-card"><div class="summary-label">잔액 (수입-지출)</div><div class="summary-value" id="sum-balance">₩0</div></div>
+
     </div>
     <div class="table-wrap">
       <div class="table-toolbar">
@@ -193,7 +193,7 @@ tbody td{padding:11px 14px;font-size:13.5px}
       <div class="summary-card"><div class="summary-label">이번달 수입</div><div class="summary-value income" id="bd-income">₩0</div></div>
       <div class="summary-card"><div class="summary-label">이번달 지출</div><div class="summary-value expense" id="bd-expense">₩0</div></div>
       <div class="summary-card"><div class="summary-label">저축</div><div class="summary-value saving" id="bd-saving">₩0</div></div>
-      <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="bd-invest" style="color:#2d7a2d">₩0</div></div>
+
       <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="bd-loan" style="color:#c06000">₩0</div></div>
       <div class="summary-card"><div class="summary-label">카드대금</div><div class="summary-value" id="bd-card" style="color:#c62828">₩0</div></div>
       <div class="summary-card"><div class="summary-label">오늘 지출</div><div class="summary-value expense" id="bd-today">₩0</div></div>
@@ -213,7 +213,7 @@ tbody td{padding:11px 14px;font-size:13.5px}
         </div>
       </div>
       <div class="board-card">
-        <div class="board-card-title">💳 카드/현금 지출 현황 (카테고리×수단)</div>
+        <div class="board-card-title">📊 카테고리별 지출 현황 (이번달)</div>
         <div id="hbar-wrap" style="position:relative"><canvas id="hbarChart" role="img" aria-label="카테고리별 수단 지출">카테고리별 수단 지출</canvas></div>
       </div>
       <div class="board-card">
@@ -281,10 +281,15 @@ tbody td{padding:11px 14px;font-size:13.5px}
   <div class="page-header"><div><div class="page-title">💳 수단별 지출 현황</div><div class="page-sub">결제 수단별 이번달 지출 현황이에요.</div></div></div>
   <div class="section">
     <div class="summary-grid">
-      <div class="summary-card"><div class="summary-label">신용카드</div><div class="summary-value expense" id="pay-신용카드">₩0</div></div>
-      <div class="summary-card"><div class="summary-label">현금</div><div class="summary-value income" id="pay-현금">₩0</div></div>
-      <div class="summary-card"><div class="summary-label">모임통장</div><div class="summary-value saving" id="pay-모임통장">₩0</div></div>
-      <div class="summary-card"><div class="summary-label">체크카드</div><div class="summary-value" id="pay-체크카드">₩0</div></div>
+      <div class="summary-card" id="pay-card-신용카드" onclick="filterPayment('신용카드')" style="cursor:pointer;transition:all .15s"><div class="summary-label">신용카드</div><div class="summary-value expense" id="pay-신용카드">₩0</div></div>
+      <div class="summary-card" id="pay-card-현금" onclick="filterPayment('현금')" style="cursor:pointer;transition:all .15s"><div class="summary-label">현금</div><div class="summary-value income" id="pay-현금">₩0</div></div>
+      <div class="summary-card" id="pay-card-모임통장" onclick="filterPayment('모임통장')" style="cursor:pointer;transition:all .15s"><div class="summary-label">모임통장</div><div class="summary-value saving" id="pay-모임통장">₩0</div></div>
+      <div class="summary-card" id="pay-card-체크카드" onclick="filterPayment('체크카드')" style="cursor:pointer;transition:all .15s"><div class="summary-label">체크카드</div><div class="summary-value" id="pay-체크카드">₩0</div></div>
+    </div>
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;color:var(--text2)">필터:</span>
+      <span id="pay-filter-label" style="font-size:13px;font-weight:600;color:var(--text)">전체</span>
+      <button id="pay-filter-reset" onclick="filterPayment('전체')" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit">✕ 전체보기</button>
     </div>
     <div class="table-wrap"><table><thead><tr><th>세부내역</th><th>날짜</th><th style="text-align:right">금액</th><th>카테고리</th><th>수단</th></tr></thead>
     <tbody id="pay-tbody"></tbody></table></div>
@@ -879,7 +884,7 @@ function renderBoard(){
   });
 
   // Division table
-  const div={'수입':{t:0,m:0,y:0},'지출':{t:0,m:0,y:0},'저축':{t:0,m:0,y:0},'투자':{t:0,m:0,y:0},'대출상환':{t:0,m:0,y:0},'카드대금':{t:0,m:0,y:0}};
+  const div={'수입':{t:0,m:0,y:0},'지출':{t:0,m:0,y:0},'저축':{t:0,m:0,y:0},'대출상환':{t:0,m:0,y:0},'카드대금':{t:0,m:0,y:0}};
   transactions.forEach(t=>{
     const key=(t.type==='저축투자상환')?'저축':t.type;
     if(!div[key])return;
@@ -887,7 +892,7 @@ function renderBoard(){
     if(t.date.startsWith(month))div[key].m+=t.amount;
     if(t.date.startsWith(year))div[key].y+=t.amount;
   });
-  const dN={'수입':'💚 수입','지출':'🍔 지출','저축':'💙 저축','투자':'📈 투자','대출상환':'🏠 대출상환','카드대금':'💳 카드대금'};
+  const dN={'수입':'💚 수입','지출':'🍔 지출','저축':'💙 저축','대출상환':'🏠 대출상환','카드대금':'💳 카드대금'};
   document.getElementById('division-table').innerHTML=Object.entries(div).map(([k,v])=>`
     <tr style="border-bottom:1px solid var(--border)">
       <td style="padding:10px 14px;font-size:13.5px;font-weight:500">${dN[k]}</td>
@@ -955,7 +960,60 @@ function renderCategory(){
     </tr>`).join('');
 }
 
+let currentPayFilter = '전체';
+
+function filterPayment(pay){
+  currentPayFilter = pay;
+  // 카드 스타일 업데이트
+  ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
+    const card = document.getElementById('pay-card-'+p);
+    if(card){
+      card.style.background = p===pay ? 'var(--accent)' : 'var(--surface)';
+      card.style.borderColor = p===pay ? 'var(--accent-dark)' : 'var(--border)';
+    }
+  });
+  // 전체 선택시 카드 스타일 초기화
+  if(pay==='전체'){
+    ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
+      const card = document.getElementById('pay-card-'+p);
+      if(card){ card.style.background='var(--surface)'; card.style.borderColor='var(--border)'; }
+    });
+  }
+  // 필터 라벨 업데이트
+  const label = document.getElementById('pay-filter-label');
+  const reset = document.getElementById('pay-filter-reset');
+  if(label) label.textContent = pay;
+  if(reset) reset.style.display = pay==='전체'?'none':'inline-block';
+  renderPayTable();
+}
+
+function renderPayTable(){
+  const month=thisMonth();
+  let list=transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출');
+  if(currentPayFilter!=='전체') list=list.filter(t=>t.payment===currentPayFilter);
+  list.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('pay-tbody').innerHTML=list.map(t=>`
+    </tr>`).join('');
+}
+
 function renderPayment(){
+  const month=thisMonth();
+  ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
+    document.getElementById('pay-'+p).textContent=fmt(transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&t.payment===p).reduce((s,t)=>s+t.amount,0));
+  });
+  currentPayFilter='전체';
+  ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
+    const card=document.getElementById('pay-card-'+p);
+    if(card){card.style.background='var(--surface)';card.style.borderColor='var(--border)';}
+  });
+  const label=document.getElementById('pay-filter-label');
+  const reset=document.getElementById('pay-filter-reset');
+  if(label)label.textContent='전체';
+  if(reset)reset.style.display='none';
+  renderPayTable();
+}
+
+function renderPayment_old(){
   const month=thisMonth();
   ['신용카드','현금','모임통장','체크카드'].forEach(p=>{
     document.getElementById('pay-'+p).textContent=fmt(transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&t.payment===p).reduce((s,t)=>s+t.amount,0));
