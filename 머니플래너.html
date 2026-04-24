@@ -111,78 +111,10 @@ tbody td{padding:11px 14px;font-size:13.5px}
   .page-title{font-size:16px}
 }
 
-#lock-screen{
-  position:fixed;inset:0;background:var(--bg);z-index:9999;
-  display:flex;align-items:center;justify-content:center;
-}
-.lock-box{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;padding:48px 40px;width:360px;max-width:90vw;
-  text-align:center;
-}
-.lock-icon{font-size:48px;margin-bottom:16px}
-.lock-title{font-size:22px;font-weight:700;margin-bottom:6px}
-.lock-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
-.lock-input{
-  width:100%;padding:12px 16px;border:1px solid var(--border);
-  border-radius:var(--rs);font-size:16px;text-align:center;
-  letter-spacing:4px;background:var(--surface);color:var(--text);
-  outline:none;font-family:inherit;margin-bottom:12px;
-  transition:border-color .15s;
-}
-.lock-input:focus{border-color:var(--accent-dark)}
-.lock-btn{
-  width:100%;padding:12px;background:var(--accent);color:var(--text);
-  border:none;border-radius:var(--rs);font-size:15px;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:all .15s;
-}
-.lock-btn:hover{background:var(--accent-dark);color:#fff}
-.lock-error{font-size:13px;color:var(--expense);margin-top:10px;min-height:18px}
-.lock-hint{font-size:12px;color:var(--text3);margin-top:16px}
 </style>
 
-<script>
-function checkPassword(){
-  const input = document.getElementById('lock-input').value;
-  const saved = localStorage.getItem('mp_password') || '1234';
-  if(input === saved){
-    document.getElementById('lock-screen').style.display = 'none';
-    localStorage.setItem('mp_unlocked', Date.now());
-  } else {
-    document.getElementById('lock-error').textContent = '❌ 비밀번호가 틀렸어요';
-    document.getElementById('lock-input').value = '';
-    document.getElementById('lock-input').focus();
-    setTimeout(()=>document.getElementById('lock-error').textContent='', 2000);
-  }
-}
-function changePassword(){
-  const current = prompt('현재 비밀번호를 입력하세요:');
-  if(current === null) return;
-  const saved = localStorage.getItem('mp_password') || '1234';
-  if(current !== saved){ alert('현재 비밀번호가 틀렸어요!'); return; }
-  const newPw = prompt('새 비밀번호를 입력하세요:');
-  if(!newPw) return;
-  const confirm = prompt('새 비밀번호를 다시 입력하세요:');
-  if(newPw !== confirm){ alert('비밀번호가 일치하지 않아요!'); return; }
-  localStorage.setItem('mp_password', newPw);
-  alert('✅ 비밀번호가 변경됐어요!');
-}
-</script>
 </head>
 <body>
-
-<div id="lock-screen">
-  <div class="lock-box">
-    <div class="lock-icon">💛</div>
-    <div class="lock-title">머니플래너</div>
-    <div class="lock-sub">비밀번호를 입력해주세요</div>
-    <input class="lock-input" id="lock-input" type="password" placeholder="••••" maxlength="20"
-      onkeydown="if(event.key==='Enter')checkPassword()">
-    <button class="lock-btn" onclick="checkPassword()">입력</button>
-    <div class="lock-error" id="lock-error"></div>
-    <div class="lock-hint">💡 최초 비밀번호: 1234 (설정에서 변경 가능)</div>
-  </div>
-</div>
 
 <div class="app">
 <aside class="sidebar">
@@ -192,7 +124,6 @@ function changePassword(){
     <button id="sync-btn" onclick="syncToSheets()" style="flex:1;background:var(--accent);color:var(--text);border:none;border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">☁️ 저장</button>
     <button id="load-btn" onclick="loadFromSheets()" style="flex:1;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 불러오기</button>
   </div>
-  <button onclick="changePassword()" style="width:100%;padding:7px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--rs);font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">🔒 비밀번호 변경</button>
 
   <div class="nav-section">
     <div class="nav-label">현금흐름</div>
@@ -226,43 +157,6 @@ function changePassword(){
     <button class="btn-primary" onclick="openModal()">+ 새로 만들기</button>
   </div>
   <div class="section">
-    <!-- 가용예산 배너 -->
-    <div id="budget-banner" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:11.5px;color:var(--text3);margin-bottom:4px;font-weight:500">이번달 수입</div>
-          <div style="font-size:17px;font-weight:700;color:var(--income)" id="budget-income">₩0</div>
-        </div>
-        <div style="color:var(--text3);font-size:18px">−</div>
-        <div>
-          <div style="font-size:11.5px;color:var(--text3);margin-bottom:4px;font-weight:500">고정비</div>
-          <div style="font-size:17px;font-weight:700;color:var(--expense)" id="budget-fixed">₩0</div>
-        </div>
-        <div style="color:var(--text3);font-size:18px">−</div>
-        <div>
-          <div style="font-size:11.5px;color:var(--text3);margin-bottom:4px;font-weight:500">저축/투자/상환</div>
-          <div style="font-size:17px;font-weight:700;color:var(--saving)" id="budget-saving">₩0</div>
-        </div>
-        <div style="color:var(--text3);font-size:18px">−</div>
-        <div>
-          <div style="font-size:11.5px;color:var(--text3);margin-bottom:4px;font-weight:500">현재까지 지출</div>
-          <div style="font-size:17px;font-weight:700;color:var(--expense)" id="budget-spent">₩0</div>
-        </div>
-        <div style="color:var(--text3);font-size:18px">=</div>
-        <div style="background:var(--accent);border-radius:var(--r);padding:12px 20px;text-align:center">
-          <div style="font-size:11.5px;font-weight:600;margin-bottom:4px">💰 남은 예산</div>
-          <div style="font-size:22px;font-weight:700" id="budget-remain">₩0</div>
-        </div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:11.5px;color:var(--text3);margin-bottom:6px">예산 소진율</div>
-        <div style="width:160px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:4px">
-          <div id="budget-bar" style="height:100%;border-radius:4px;transition:width .5s;background:var(--income);width:0%"></div>
-        </div>
-        <div style="font-size:12px;font-weight:600" id="budget-pct">0%</div>
-      </div>
-    </div>
-
     <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
       <div class="summary-card"><div class="summary-label">이번달 수입</div><div class="summary-value income" id="sum-income">₩0</div></div>
       <div class="summary-card"><div class="summary-label">이번달 지출</div><div class="summary-value expense" id="sum-expense">₩0</div></div>
@@ -540,17 +434,8 @@ function changePassword(){
           <optgroup label="수입"><option>급여소득</option><option>보험금</option><option>예적금 이자</option><option>주식 매도/배당</option><option>기타수입</option><option>더치페이</option><option>생활비</option></optgroup>
           <optgroup label="지출"><option>식비</option><option>배달</option><option>간식</option><option>커피</option><option>편의점</option><option>통신비</option><option>차량/주유/교통비</option><option>의료비/보험료</option><option>패션</option><option>생필품</option><option>미용</option><option>여행</option><option>선물</option><option>여가비</option><option>구독서비스</option><option>경조사비</option><option>기타지출</option></optgroup>
           <optgroup label="저축/투자/대출">
-            <option>예적금</option>
-            <option>청약</option>
-            <option>보험</option>
-            <option>모임통장</option>
-            <option>주식/ETF</option>
-            <option>코인</option>
-            <option>부동산</option>
-            <option>기타투자</option>
-            <option>대출상환</option>
-            <option>카드대금</option>
-            <option>이자납부</option>
+            <option>저축/투자</option>
+            <option>대출상환/카드</option>
           </optgroup>
         </select>
       </div>
@@ -874,30 +759,6 @@ function renderLedger(){
   }
   const bal=inc-exp;const el=document.getElementById('sum-balance');
   el.textContent=(bal<0?'-':'')+fmt(bal);el.style.color=bal<0?'var(--expense)':bal>0?'var(--income)':'var(--text)';
-
-  // 가용예산 계산
-  const fixedAmt=transactions.filter(t=>t.date.startsWith(month)&&t.fixed&&t.type==='지출').reduce((s,t)=>s+t.amount,0);
-  const savingAmt=transactions.filter(t=>t.date.startsWith(month)&&(t.type==='저축'||t.type==='투자'||t.type==='대출상환'||t.type==='카드대금'||t.type==='저축투자상환')).reduce((s,t)=>s+t.amount,0);
-  const varExp=transactions.filter(t=>t.date.startsWith(month)&&t.type==='지출'&&!t.fixed).reduce((s,t)=>s+t.amount,0);
-  const remain=inc-fixedAmt-savingAmt-varExp;
-  const totalSpendable=inc-fixedAmt-savingAmt;
-  const pct=totalSpendable>0?Math.min(100,Math.round(varExp/totalSpendable*100)):0;
-
-  if(document.getElementById('budget-income')){
-    document.getElementById('budget-income').textContent=fmt(inc);
-    document.getElementById('budget-fixed').textContent=fmt(fixedAmt);
-    document.getElementById('budget-saving').textContent=fmt(savingAmt);
-    document.getElementById('budget-spent').textContent=fmt(varExp);
-    const remEl=document.getElementById('budget-remain');
-    remEl.textContent=(remain<0?'-':'')+fmt(Math.abs(remain));
-    remEl.style.color=remain<0?'var(--expense)':'var(--text)';
-    const bar=document.getElementById('budget-bar');
-    bar.style.width=pct+'%';
-    bar.style.background=pct>=100?'var(--expense)':pct>=80?'#f5a623':'var(--income)';
-    document.getElementById('budget-pct').textContent=pct+'%';
-    document.getElementById('budget-pct').style.color=pct>=100?'var(--expense)':pct>=80?'#f5a623':'var(--income)';
-  }
-
   renderLedgerRows();
 }
 
