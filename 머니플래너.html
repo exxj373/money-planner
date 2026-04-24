@@ -1620,6 +1620,12 @@ const STOCK_CASH_SAMPLE = [
   {id:8,date:'2026-04-22',type:'입금',amount:2000000,memo:'이체입금'},
   {id:9,date:'2026-04-22',type:'입금',amount:542173,memo:'이체입금'},
   {id:10,date:'2026-04-22',type:'출금',amount:455987,memo:'이체출금'},
+  {id:11,date:'2026-04-23',type:'입금',amount:5100,memo:'이은진 이체입금'},
+  {id:12,date:'2026-04-23',type:'입금',amount:495000,memo:'이은진 이체입금'},
+  {id:13,date:'2026-04-23',type:'출금',amount:438624,memo:'이은진 이체출금'},
+  {id:14,date:'2026-04-23',type:'입금',amount:438000,memo:'이은진 이체입금'},
+  {id:15,date:'2026-04-23',type:'출금',amount:463775,memo:'이은진 이체출금'},
+  {id:16,date:'2026-04-23',type:'입금',amount:473700,memo:'이은진 이체입금'},
 ];
 const STOCK_TRADE_SAMPLE = [
   {id:1,date:'2026-04-10',name:'빛과전자',pnl:26237},
@@ -1632,10 +1638,16 @@ const STOCK_TRADE_SAMPLE = [
   {id:8,date:'2026-04-15',name:'대한광통신',pnl:59878},
   {id:9,date:'2026-04-21',name:'대우건설',pnl:59327},
   {id:10,date:'2026-04-22',name:'대한광통신',pnl:-141013},
+  {id:11,date:'2026-04-23',name:'대우건설 70주',pnl:112827},
+  {id:12,date:'2026-04-23',name:'대우건설 30주',pnl:4012},
+  {id:13,date:'2026-04-24',name:'대한광통신 30주',pnl:455987},
+  {id:14,date:'2026-04-27',name:'솔루스첨단소재 30주',pnl:-9425},
+  {id:15,date:'2026-04-27',name:'이녹스 30주',pnl:624},
 ];
 const STOCK_HOLD_SAMPLE = [
-  {id:1,name:'대한광통신',qty:20,cost:398000,eval:305987},
-  {id:2,name:'삼성SDI',qty:7,cost:4635000,eval:4610760},
+  {id:1,name:'대한광통신',qty:20,cost:398000,eval:271456},
+  {id:2,name:'삼성SDI',qty:7,cost:4635000,eval:4443096},
+  {id:3,name:'솔루스첨단소재',qty:30,cost:498900,eval:458681},
 ];
 
 let stockCash = JSON.parse(localStorage.getItem('dp_stcash')||'null')||STOCK_CASH_SAMPLE;
