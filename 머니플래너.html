@@ -762,8 +762,6 @@ function renderLedger(){
     const card=transactions.filter(t=>t.date.startsWith(thisMonth())&&t.type==='카드대금').reduce((s,t)=>s+t.amount,0);
     document.getElementById('sum-card').textContent=fmt(card);
   }
-  const bal=inc-exp;const el=document.getElementById('sum-balance');
-  el.textContent=(bal<0?'-':'')+fmt(bal);el.style.color=bal<0?'var(--expense)':bal>0?'var(--income)':'var(--text)';
   renderLedgerRows();
 }
 
