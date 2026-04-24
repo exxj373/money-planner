@@ -232,6 +232,7 @@ function changePassword(){
       <div class="summary-card"><div class="summary-label">저축</div><div class="summary-value saving" id="sum-saving">₩0</div></div>
       <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="sum-invest" style="color:#2d7a2d">₩0</div></div>
       <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="sum-loan-pay" style="color:#c06000">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">카드대금</div><div class="summary-value" id="sum-card" style="color:#c62828">₩0</div></div>
       <div class="summary-card"><div class="summary-label">잔액 (수입-지출)</div><div class="summary-value" id="sum-balance">₩0</div></div>
     </div>
     <div class="table-wrap">
@@ -242,6 +243,7 @@ function changePassword(){
         <button class="filter-btn" onclick="filterType('저축',this)">🏦 저축</button>
         <button class="filter-btn" onclick="filterType('투자',this)">📈 투자</button>
         <button class="filter-btn" onclick="filterType('대출상환',this)">🏠 대출상환</button>
+        <button class="filter-btn" onclick="filterType('카드대금',this)">💳 카드대금</button>
         <div class="spacer"></div>
         <input class="search-input" type="text" placeholder="🔍 검색..." oninput="searchTable(this.value)">
       </div>
@@ -262,6 +264,7 @@ function changePassword(){
       <div class="summary-card"><div class="summary-label">저축</div><div class="summary-value saving" id="bd-saving">₩0</div></div>
       <div class="summary-card"><div class="summary-label">투자</div><div class="summary-value" id="bd-invest" style="color:#2d7a2d">₩0</div></div>
       <div class="summary-card"><div class="summary-label">대출상환</div><div class="summary-value" id="bd-loan" style="color:#c06000">₩0</div></div>
+      <div class="summary-card"><div class="summary-label">카드대금</div><div class="summary-value" id="bd-card" style="color:#c62828">₩0</div></div>
       <div class="summary-card"><div class="summary-label">오늘 지출</div><div class="summary-value expense" id="bd-today">₩0</div></div>
     </div>
     <div class="board-grid">
@@ -326,7 +329,7 @@ function changePassword(){
   <div class="page-header"><div><div class="page-title">🔍 기간별 세부현황</div><div class="page-sub">특정 연도 또는 월 단위로 조회할 수 있어요. (예: 2026 또는 2026.04)</div></div></div>
   <div class="section">
     <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
-      <input class="form-input" id="period-input" type="text" placeholder="2026.04" style="width:180px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;background:var(--surface);color:var(--text);outline:none;font-family:inherit">
+      <input class="form-input" id="period-input" type="text" lang="ko" inputmode="text" placeholder="2026.04" style="width:180px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;background:var(--surface);color:var(--text);outline:none;font-family:inherit">
       <button class="btn-primary" onclick="renderPeriod()">조회</button>
     </div>
     <div id="period-columns" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"></div>
@@ -488,7 +491,7 @@ function changePassword(){
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
   <div class="modal">
     <div class="modal-title" id="modal-title">✏️ 새 거래 입력</div>
-    <div class="form-row"><label class="form-label">세부내역 *</label><input class="form-input" id="f-name" type="text" placeholder="예: 스타벅스, 쿠팡..."></div>
+    <div class="form-row"><label class="form-label">세부내역 *</label><input class="form-input" id="f-name" type="text" lang="ko" inputmode="text" placeholder="예: 스타벅스, 쿠팡..."></div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">날짜 *</label><input class="form-input" id="f-date" type="date"></div>
       <div class="form-row" style="margin-bottom:0"><label class="form-label">금액 *</label><input class="form-input" id="f-amount" type="number" placeholder="0" min="0"></div>
@@ -510,13 +513,13 @@ function changePassword(){
     </div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">구분 *</label>
-        <select class="form-select" id="f-type"><option>지출</option><option>수입</option><option>저축</option><option>투자</option><option>대출상환</option></select>
+        <select class="form-select" id="f-type"><option>지출</option><option>수입</option><option>저축</option><option>투자</option><option>대출상환</option><option>카드대금</option></select>
       </div>
       <div class="form-row" style="margin-bottom:0"><label class="form-label">고정비</label>
         <select class="form-select" id="f-fixed"><option value="false">아니오</option><option value="true">예</option></select>
       </div>
     </div>
-    <div class="form-row"><label class="form-label">메모</label><input class="form-input" id="f-memo" type="text" placeholder="메모 입력..."></div>
+    <div class="form-row"><label class="form-label">메모</label><input class="form-input" id="f-memo" type="text" lang="ko" inputmode="text" placeholder="메모 입력..."></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">취소</button>
       <button class="btn-primary" onclick="addTransaction()">저장</button>
@@ -613,7 +616,7 @@ function changePassword(){
       </div>
     </div>
     <div class="form-row"><label class="form-label">금액 *</label><input class="form-input" id="sc-amount" type="number" placeholder="0" min="0"></div>
-    <div class="form-row"><label class="form-label">비고</label><input class="form-input" id="sc-memo" type="text" placeholder="이체입금, 이체출금..."></div>
+    <div class="form-row"><label class="form-label">비고</label><input class="form-input" id="sc-memo" type="text" lang="ko" inputmode="text" placeholder="이체입금, 이체출금..."></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeStockCashModal()">취소</button>
       <button class="btn-primary" onclick="addStockCash()">저장</button>
@@ -627,7 +630,7 @@ function changePassword(){
     <div class="modal-title" id="stock-trade-modal-title">📊 매도 추가</div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">날짜 *</label><input class="form-input" id="str-date" type="date"></div>
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">종목 *</label><input class="form-input" id="str-name" type="text" placeholder="삼성전자"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">종목 *</label><input class="form-input" id="str-name" type="text" lang="ko" inputmode="text" placeholder="삼성전자"></div>
     </div>
     <div class="form-row"><label class="form-label">실현손익 *</label><input class="form-input" id="str-pnl" type="number" placeholder="손실이면 음수로 입력"></div>
     <div class="modal-footer">
@@ -641,7 +644,7 @@ function changePassword(){
 <div class="modal-overlay" id="stock-hold-modal" onclick="if(event.target.id==='stock-hold-modal')closeStockHoldModal()">
   <div class="modal">
     <div class="modal-title" id="stock-hold-modal-title">🏦 보유주식 추가/수정</div>
-    <div class="form-row"><label class="form-label">종목 *</label><input class="form-input" id="sh-name" type="text" placeholder="삼성전자"></div>
+    <div class="form-row"><label class="form-label">종목 *</label><input class="form-input" id="sh-name" type="text" lang="ko" inputmode="text" placeholder="삼성전자"></div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">수량 *</label><input class="form-input" id="sh-qty" type="number" placeholder="10" min="0"></div>
       <div class="form-row" style="margin-bottom:0"><label class="form-label">원금 *</label><input class="form-input" id="sh-cost" type="number" placeholder="1000000" min="0"></div>
@@ -658,7 +661,7 @@ function changePassword(){
 <div class="modal-overlay" id="loan-modal" onclick="if(event.target.id==='loan-modal')closeLoanModal()">
   <div class="modal">
     <div class="modal-title" id="loan-modal-title">🏠 대출 추가</div>
-    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="l-name" type="text" placeholder="예: 신한은행 버팀목 전세자금대출"></div>
+    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="l-name" type="text" lang="ko" inputmode="text" placeholder="예: 신한은행 버팀목 전세자금대출"></div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">대출상품</label>
         <select class="form-select" id="l-type"><option>주택대출</option><option>신용 대출</option><option>전세대출</option><option>사업자대출</option><option>기타</option></select>
@@ -677,7 +680,7 @@ function changePassword(){
     </div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">대출기간 (년) *</label><input class="form-input" id="l-years" type="number" placeholder="2" min="1"></div>
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="l-memo" type="text" placeholder="메모"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="l-memo" type="text" lang="ko" inputmode="text" placeholder="메모"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeLoanModal()">취소</button>
@@ -690,9 +693,9 @@ function changePassword(){
 <div class="modal-overlay" id="ins-modal" onclick="if(event.target.id==='ins-modal')closeInsModal()">
   <div class="modal">
     <div class="modal-title" id="ins-modal-title">🛡️ 보험 추가</div>
-    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="i-name" type="text" placeholder="예: KB탑클래스 건강보험"></div>
+    <div class="form-row"><label class="form-label">상품명 *</label><input class="form-input" id="i-name" type="text" lang="ko" inputmode="text" placeholder="예: KB탑클래스 건강보험"></div>
     <div class="form-row-2">
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">보험사</label><input class="form-input" id="i-company" type="text" placeholder="KB손해보험"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">보험사</label><input class="form-input" id="i-company" type="text" lang="ko" inputmode="text" placeholder="KB손해보험"></div>
       <div class="form-row" style="margin-bottom:0"><label class="form-label">보험종류</label>
         <select class="form-select" id="i-kind"><option>건강보험</option><option>실손보험</option><option>생명보험</option><option>자동차보험</option><option>화재보험</option><option>기타</option></select>
       </div>
@@ -714,8 +717,8 @@ function changePassword(){
       <div class="form-row" style="margin-bottom:0"><label class="form-label">납입년수</label><input class="form-input" id="i-years" type="number" placeholder="30" min="0"></div>
     </div>
     <div class="form-row-2">
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">보장금액</label><input class="form-input" id="i-coverage" type="text" placeholder="암진단비 (3억원)"></div>
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">특약</label><input class="form-input" id="i-special" type="text" placeholder="크라운 보장 (2천만원)"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">보장금액</label><input class="form-input" id="i-coverage" type="text" lang="ko" inputmode="text" placeholder="암진단비 (3억원)"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">특약</label><input class="form-input" id="i-special" type="text" lang="ko" inputmode="text" placeholder="크라운 보장 (2천만원)"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeInsModal()">취소</button>
@@ -729,8 +732,8 @@ function changePassword(){
   <div class="modal">
     <div class="modal-title" id="sav-modal-title">💰 예적금 추가</div>
     <div class="form-row-2">
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">상품명 *</label><input class="form-input" id="s-name" type="text" placeholder="하나은행 적금"></div>
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">은행명</label><input class="form-input" id="s-bank" type="text" placeholder="하나은행"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">상품명 *</label><input class="form-input" id="s-name" type="text" lang="ko" inputmode="text" placeholder="하나은행 적금"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">은행명</label><input class="form-input" id="s-bank" type="text" lang="ko" inputmode="text" placeholder="하나은행"></div>
     </div>
     <div class="form-row-2">
       <div class="form-row" style="margin-bottom:0"><label class="form-label">월 납입액 (원) *</label><input class="form-input" id="s-monthly" type="number" placeholder="100000" min="0"></div>
@@ -741,8 +744,8 @@ function changePassword(){
       <div class="form-row" style="margin-bottom:0"><label class="form-label">만기일</label><input class="form-input" id="s-end" type="date"></div>
     </div>
     <div class="form-row-2">
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">저축목표</label><input class="form-input" id="s-goal" type="text" placeholder="여행자금, 비상금..."></div>
-      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="s-memo" type="text" placeholder="메모"></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">저축목표</label><input class="form-input" id="s-goal" type="text" lang="ko" inputmode="text" placeholder="여행자금, 비상금..."></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">메모</label><input class="form-input" id="s-memo" type="text" lang="ko" inputmode="text" placeholder="메모"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeSavModal()">취소</button>
@@ -773,7 +776,7 @@ function typeClass(t){
   if(t==='수입') return 'tag badge-income';
   if(t==='저축투자상환'||t==='저축') return 'tag badge-saving';
   if(t==='투자') return 'tag badge-invest';
-  if(t==='대출상환') return 'tag badge-loan';
+  if(t==='대출상환'||t==='카드대금') return 'tag badge-loan';
   return 'tag badge-expense';
 }
 function typeLabel(t){return t==='저축투자상환'?'저축':t==='대출상환'?'대출상환':t}
@@ -811,13 +814,17 @@ function renderLedger(){
     else if(t.type==='지출')exp+=t.amount;
     else if(t.type==='저축'||t.type==='저축투자상환')sav+=t.amount;
     else if(t.type==='투자')inv+=t.amount;
-    else if(t.type==='대출상환')loan+=t.amount;
+    else if(t.type==='대출상환'||t.type==='카드대금')loan+=t.amount;
   });
   document.getElementById('sum-income').textContent=fmt(inc);
   document.getElementById('sum-expense').textContent=fmt(exp);
   document.getElementById('sum-saving').textContent=fmt(sav);
   if(document.getElementById('sum-invest'))document.getElementById('sum-invest').textContent=fmt(inv);
   if(document.getElementById('sum-loan-pay'))document.getElementById('sum-loan-pay').textContent=fmt(loan);
+  if(document.getElementById('sum-card')){
+    const card=transactions.filter(t=>t.date.startsWith(thisMonth())&&t.type==='카드대금').reduce((s,t)=>s+t.amount,0);
+    document.getElementById('sum-card').textContent=fmt(card);
+  }
   const bal=inc-exp;const el=document.getElementById('sum-balance');
   el.textContent=(bal<0?'-':'')+fmt(bal);el.style.color=bal<0?'var(--expense)':bal>0?'var(--income)':'var(--text)';
   renderLedgerRows();
@@ -853,7 +860,7 @@ function renderBoard(){
       else if(t.type==='지출')exp+=t.amount;
       else if(t.type==='저축'||t.type==='저축투자상환')sav+=t.amount;
       else if(t.type==='투자')inv+=t.amount;
-      else if(t.type==='대출상환')loanPay+=t.amount;
+      else if(t.type==='대출상환'||t.type==='카드대금')loanPay+=t.amount;
     }
     if(t.date===today&&t.type==='지출')todayExp+=t.amount;
   });
@@ -862,6 +869,10 @@ function renderBoard(){
   document.getElementById('bd-saving').textContent=fmt(sav);
   if(document.getElementById('bd-invest'))document.getElementById('bd-invest').textContent=fmt(inv);
   if(document.getElementById('bd-loan'))document.getElementById('bd-loan').textContent=fmt(loanPay);
+  if(document.getElementById('bd-card')){
+    const cardAmt=transactions.filter(t=>t.date.startsWith(month)&&t.type==='카드대금').reduce((s,t)=>s+t.amount,0);
+    document.getElementById('bd-card').textContent=fmt(cardAmt);
+  }
   document.getElementById('bd-today').textContent=fmt(todayExp);
 
   // Donut chart
@@ -1267,7 +1278,8 @@ const ALL_CATS=[
   {type:'지출',cats:['식비','배달','간식','커피','편의점','통신비','차량/주유/교통비','의료비/보험료','패션','생필품','미용','여행','선물','여가비','구독서비스','경조사비','기타지출']},
   {type:'저축',cats:['예적금','청약','보험','모임통장']},
   {type:'투자',cats:['주식/ETF','코인','부동산','기타투자']},
-  {type:'대출상환',cats:['대출상환','카드대금','이자납부']},
+  {type:'카드대금',cats:['카드대금']},
+  {type:'대출상환',cats:['대출상환','이자납부']},
 ];
 let goals=JSON.parse(localStorage.getItem('dp_goals')||'{"급여소득": 3200000, "식비": 300000, "통신비": 15000, "차량/주유/교통비": 55000, "의료비/보험료": 200000, "패션": 100000, "경조사비": 100000, "배달": 150000, "화장품": 50000, "편의점": 20000, "간식": 30000, "커피": 50000, "구독서비스": 50000, "생활비": 3000, "생필품": 200000, "여가비": 100000}');
 
