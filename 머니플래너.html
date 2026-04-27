@@ -143,7 +143,7 @@ tbody td{padding:11px 14px;font-size:13.5px}
     <div class="nav-label">자산관리</div>
     <div class="nav-item" onclick="showPage('loan',this)"><span class="nav-icon">🏠</span>대출</div>
     <div class="nav-item" onclick="showPage('savings',this)"><span class="nav-icon">💰</span>예적금</div>
-    <div class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📈</span>주식</div>
+    <div class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📈</span>투자</div>
     <div class="nav-item" onclick="showPage('insurance',this)"><span class="nav-icon">🛡️</span>보험</div>
   </div>
 </aside>
@@ -761,6 +761,28 @@ function renderLedger(){
   if(document.getElementById('sum-card')){
     const card=transactions.filter(t=>t.date.startsWith(thisMonth())&&t.type==='카드대금').reduce((s,t)=>s+t.amount,0);
     document.getElementById('sum-card').textContent=fmt(card);
+  }
+  // 주식 투자 현황 업데이트
+  if(document.getElementById('ledger-st-net')){
+    const totalIn=stockCash.filter(s=>s.type==='입금').reduce((s,x)=>s+x.amount,0);
+    const totalOut=stockCash.filter(s=>s.type==='출금').reduce((s,x)=>s+x.amount,0);
+    const netInput=totalIn-totalOut;
+    const holdEval=stockHold.reduce((s,x)=>s+x.eval,0);
+    const holdCost=stockHold.reduce((s,x)=>s+x.cost,0);
+    const realPnl=stockTrade.reduce((s,x)=>s+x.pnl,0);
+    const holdPnl=holdEval-holdCost;
+    const totalPnl=realPnl+holdPnl;
+
+    document.getElementById('ledger-st-net').textContent=fmt(netInput);
+    document.getElementById('ledger-st-eval').textContent=fmt(holdEval);
+
+    const realEl=document.getElementById('ledger-st-real');
+    realEl.textContent=(realPnl>=0?'+':'-')+fmt(Math.abs(realPnl));
+    realEl.style.color=realPnl>=0?'var(--income)':'var(--expense)';
+
+    const totalEl=document.getElementById('ledger-st-total');
+    totalEl.textContent=(totalPnl>=0?'+':'-')+fmt(Math.abs(totalPnl));
+    totalEl.style.color=totalPnl>=0?'var(--income)':'var(--expense)';
   }
   renderLedgerRows();
 }
