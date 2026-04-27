@@ -704,7 +704,7 @@ const CAT_COLORS=['#f5a623','#d85a30','#e8855a','#d84066','#5b8dd9','#2d9e75','#
 
 function save(){try{localStorage.setItem('dp_tx',JSON.stringify(transactions))}catch(e){}triggerAutoSave();}
 function fmt(n){return'₩'+Math.abs(Math.round(n)).toLocaleString('ko-KR')}
-function fmtDate(d){return d.replace(/-/g,'/').substring(2)}
+function fmtDate(d){if(!d)return'-';const clean=(d||'').substring(0,10);return clean.replace(/-/g,'/').substring(2)}
 function todayStr(){return new Date().toISOString().slice(0,10)}
 function thisMonth(){return new Date().toISOString().slice(0,7)}
 function thisYear(){return new Date().getFullYear().toString()}
