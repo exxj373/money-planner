@@ -1710,6 +1710,12 @@ const STOCK_CASH_SAMPLE = [
   {id:14,date:'2026-04-23',type:'입금',amount:438000,memo:'이은진 이체입금'},
   {id:15,date:'2026-04-23',type:'출금',amount:463775,memo:'이은진 이체출금'},
   {id:16,date:'2026-04-23',type:'입금',amount:473700,memo:'이은진 이체입금'},
+  {id:17,date:'2026-04-27',type:'출금',amount:2748000,memo:'삼성SDI 4주 구매'},
+  {id:18,date:'2026-04-27',type:'입금',amount:2468272,memo:'삼성SDI 매도'},
+  {id:19,date:'2026-04-27',type:'출금',amount:972300,memo:'솔루스첨단소재 60주 구매'},
+  {id:20,date:'2026-04-27',type:'출금',amount:436500,memo:'이녹스 30주 구매'},
+  {id:21,date:'2026-04-27',type:'입금',amount:900599,memo:'이녹스/솔루스 매도'},
+  {id:22,date:'2026-04-28',type:'출금',amount:345920,memo:'대한광통신 매도'},
 ];
 const STOCK_TRADE_SAMPLE = [
   {id:1,date:'2026-04-10',name:'빛과전자',pnl:26237},
@@ -1727,11 +1733,12 @@ const STOCK_TRADE_SAMPLE = [
   {id:13,date:'2026-04-24',name:'대한광통신 30주',pnl:455987},
   {id:14,date:'2026-04-27',name:'솔루스첨단소재 30주',pnl:-9425},
   {id:15,date:'2026-04-27',name:'이녹스 30주',pnl:624},
+  {id:16,date:'2026-04-28',name:'삼성SDI',pnl:-279728},
+  {id:17,date:'2026-04-28',name:'대한광통신',pnl:-119957},
+  {id:18,date:'2026-04-28',name:'산일전기',pnl:15200},
 ];
 const STOCK_HOLD_SAMPLE = [
-  {id:1,name:'대한광통신',qty:20,cost:398000,eval:271456},
-  {id:2,name:'삼성SDI',qty:7,cost:4635000,eval:4443096},
-  {id:3,name:'솔루스첨단소재',qty:30,cost:498900,eval:458681},
+  {id:1,name:'솔루스첨단소재',qty:30,cost:498900,eval:458981},
 ];
 
 let stockCash = JSON.parse(localStorage.getItem('dp_stcash')||'null')||STOCK_CASH_SAMPLE;
